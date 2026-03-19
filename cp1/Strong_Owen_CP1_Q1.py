@@ -11,13 +11,12 @@ def phi2p(x):
 
 def phi2p_approx(x, h):
     # Assumes x values are evenly spaced h apart
-    pv = phi(x)
-    l = len(pv)-3 # Use 4 terms to need to stop 3 before
-    phi2p_vals = np.zeros(l+3)
+    phi2p_vals = (2*phi(x) - 5*phi(x+h) + 4*phi(x+2*h) - phi(x+3*h)) / (h**2)
 
-    # phi2p_vals[:-3] = (pv[:-3] - 5*pv[1:-2] + 4*pv[2:-1] - pv[3:]) / (h**2)
-    for i in range(l):
-        phi2p_vals[i] = (2*pv[i] - 5*pv[i+1] + 4*pv[i+2] - pv[i+3]) / (h**2)
+    # Alternative formulation using one set of known points (i.e. not magically going past the boundary)
+    # pv = phi(x)
+    # phi2p_vals = np.zeros(len(pv))
+    # phi2p_vals[:-3] = (2*pv[:-3] - 5*pv[1:-2] + 4*pv[2:-1] - pv[3:]) / (h**2)
     return phi2p_vals
 
 xa = np.linspace(0, 10, 1000)
