@@ -1,0 +1,206 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx} % Required for inserting images
+
+\title{NPRE 455 Computer Project 1}
+\author{Owen Strong \\
+\itshape Prof.: April Novak\\
+% \itshape TA: Kholod Mahmoud \\
+% \itshape TA: Shaffer Bauer \\
+% \itshape TA: Justin Jia \\
+}
+\date{March 24th, 2026}
+
+\usepackage[
+    style=ieee
+]{biblatex}
+\bibliography{refs.bib}
+
+\usepackage[letterpaper, margin=1in]{geometry}
+\usepackage{xspace}
+
+% Figure Macros
+\newcommand{\figwidth}{0.75\linewidth}
+\newcommand{\figref}[1]{Fig.~\ref{#1}}
+\newcommand{\defplotW}[3]{
+    \begin{figure}[!htb]
+        \centering
+        \includegraphics[width=#3\linewidth]{fig/#1.png}
+        \caption{#2}
+        \newcommand{\tmplabel}{fig:#1}
+        \label{\tmplabel}
+    \end{figure}
+}
+\newcommand{\defplot}[2]{\defplotW{#1}{#2}{0.75}}
+
+% Common Macros
+\newcommand{\micCi}{\xspace$\mathrm{\mu Ci}$\xspace}
+\newcommand{\CsSrc}{\xspace$\mathrm{^{137}Cs}$\xspace}
+\newcommand{\bigO}{\mathcal{O}}
+
+\usepackage{placeins} % FloatBarrier
+\usepackage{amsmath} % align
+\usepackage{xcolor}
+\usepackage[colorlinks=true, citecolor=violet, linkcolor=violet, urlcolor=violet]{hyperref}
+\usepackage{enumitem}
+
+\begin{document}
+\pagenumbering{gobble}
+\maketitle
+\pagebreak
+{\hypersetup{linkcolor=black}\tableofcontents}
+\pagebreak
+\pagenumbering{arabic}
+\begin{abstract}
+
+\end{abstract}
+
+\section{Introduction}
+\section{Problem 1}
+% Theory behind finite difference methods
+In engineering mathematics, a number of differential equations prove undesirable to solve using analytic techniques.
+A common practical technique to solve problems using these equations is instead to use a ``finite difference'' approximation scheme, in which derivatives are approximated using finite differential quotients.\\
+
+Consider, in the simplest case, the definition of a 1D derivative as the slope, or rise over run, of a function:
+\begin{equation}
+    \label{eq:lim-h}
+    f'(x)=\frac{df(x)}{dx}=\lim_{h\rightarrow0}\frac{f(x+h)-f(x)}{h}
+\end{equation}
+This yields a simple ``finite difference'' approximation of the derivative, with a small enough spacing $h$:
+\begin{equation}\label{eq:right}
+    f'(x)\approx\frac{f(x+h)-f(x)}{h}
+\end{equation}
+There is, however, no reason this could not be taken about a point $h$ behind $x$:
+\begin{equation}
+    f'(x)\approx\frac{f(x)-f(x-h)}{h}
+\end{equation}
+or from both sides:
+\begin{equation}\label{eq:central}
+    f'(x)\approx\frac{f(x+h)-f(x-h)}{2h}
+\end{equation}
+To question how accurate such an approximation is, one can employ a Taylor series approximation of the function around $x$:
+\begin{equation}
+    f(x+h)=f(x)+hf'(x)+\frac{h^2}{2}f''(x)+\frac{h^3}{6}f'''(x)+HOT
+\end{equation}
+where $HOT$ denotes ``higher order terms'' which we expect to contribute increasingly less and less.
+In this case, by applying the approximation at $x+h$, we can derive the right side differential from Eq.~\ref{eq:right}:
+\begin{gather*}
+    f(x+h)=f(x)+hf'(x)+\frac{h^2}{2}f''(x)+\frac{h^3}{6}f'''(x)+HOT \\
+    f(x+h)-f(x)=hf'(x)+\frac{h^2}{2}f''(x)+\frac{h^3}{6}f'''(x)+HOT
+\end{gather*}
+\begin{equation}\label{eq:right_err}
+    \frac{f(x+h)-f(x)}{h}=f'(x)+\boxed{\frac{h}{2}f''(x)+\frac{h^2}{6}f'''(x)+HOT}
+\end{equation}
+where the boxed term now quantifies the expected difference of Eq~\ref{eq:right}'s approximation from the true $f'(x)$.
+If a small enough $h$ is chosen ($h<1$), we expect $h^2$ to decay faster than $h$ as $h$ decreases, and $h^3$ than $h^2$ and so on.
+Thus, since the lowest power of $h$ an error term in Eq.~\ref{eq:right_error} is $h$, we say that this approximation has an error on the order $\bigO(h)$.\\
+
+This use of the Taylor series, of course, can be applied to other points than $x+h$:
+\begin{gather*}
+    f(x-h)=f(x)-hf'(x)+\frac{h^2}{2}f''(x)-\frac{h^3}{6}f'''(x)+HOT \\
+    f(x)-f(x-h)=hf'(x)-\frac{h^2}{2}f''(x)+\frac{h^3}{6}f'''(x)+HOT \\
+\end{gather*}
+\begin{equation}
+    \frac{f(x)-f(x-h)}{h}=f'(x)-\frac{h}{2}f''(x)+\frac{h^2}{6}f'''(x)+HOT
+\end{equation}
+or combined as in Eq.~\ref{eq:central}:
+\begin{align*}
+    f(x+h)-f(x-h)=&f(x)+hf'(x)+\frac{h^2}{2}f''(x)+\frac{h^3}{6}f'''(x)+HOT\\
+    &-\left[f(x)-hf'(x)+\frac{h^2}{2}f''(x)-\frac{h^3}{6}f'''(x)+HOT\right]\\
+    =&2hf'(x)+2\frac{h^3}{6}f'''(x)+HOT
+\end{align*}
+\begin{equation}\label{eq:central_err}
+    \frac{f(x+h)-f(x-h)}{2h}=f'(x)+\frac{h^2}{6}f'''(x)+HOT
+\end{equation}
+Note how in this last example, a pair of terms cancel out, resulting in an error on the order $\bigO(h^2)$ instead of $\bigO(h)$.\\
+
+In fact, given some number $n$ of accessible \emph{nodes} of $f(x)$, one can find \emph{weights} for a generally optimal linear combination of these points equivalent to $f'(x)$ which eliminates at least $n-1$ error terms.
+For example, consider using the points $f(x)$, $f(x+h)$, $f(x+2h)$, and $f(x+3h)$. %, denoting these $x$ values $x_i$ through $x_{i+3}$.
+If we rewrite these points as Taylor expansions around $x$:
+\begin{align}
+    f(x) &= f(x) && + 0 && + 0 && + 0 && + ...\\
+    f(x+h) &= f(x) &&+ hf'(x) &&+ \frac{h^2}{2}f''(x) &&+ \frac{h^3}{6}f'''(x) &&+...\\
+    f(x+2h) &= f(x) &&+ 2hf'(x) &&+ \frac{4h^2}{2}f''(x) &&+ \frac{8h^3}{6}f'''(x) &&+...\\
+    f(x+3h) &= f(x) &&+ 3hf'(x) &&+ \frac{9h^2}{2}f''(x) &&+ \frac{27h^3}{6}f'''(x) &&+...\\
+\end{align}
+thus, having four expressions to combine there is some linear combination of these points $f(x+nh)$ that both is equivalent to the target derivative and eliminates the first three other terms of the polynomials, leaving only error from the higher order terms of maximum order $\bigO(h^4)$.
+In fact, we could choose any of these first three derivatives to feasibly approximate.
+Suppose we wished to find some linear combination $af(x) + bf(x+h)+cf(x+2h)+df(x+3f)$ which approximated $f''(x)$ with as small an order of error as possible.\footnote{Since the referenced points are all to the right of $x$, this would be considered a \emph{right}-handed, or \emph{forward} finite difference approximation. One entirely on the left side would be considered left-handed or backwards, while a perfectly centered one such as $af(x-h)+bf(x)+cf(x+h)$ would be considered a central difference.}
+Expanding this combination (and introducing the notation $x_{i+n}=x+nh$):
+\begin{align}
+    af(x_i) + bf(x_{i+1})+cf(x_{i+2})+df(x_{i+3})
+    &=(a+b+c+d)f(x_i)\\
+    &+(b + 2c + 3d)hf'(x_i)\nonumber\\
+    &+(b + 4c + 9d)h^2f''(x_i)/2\nonumber\\
+    &+(b + 8c + 27d)h^3f'''(x_i)/6\nonumber\\
+    &+(b + 16c + 81d)h^4f'''(x_i)/24+...\nonumber
+\end{align}
+We can formulate this as a matrix problem to have $1\times f''(x_i)$, and eliminate the first three other terms.
+That is:
+\begin{equation}\label{eq:find_coeff}
+    \begin{bmatrix}
+        1 & 1 & 1 & 1 \\
+        0 & h & 2h & 3h \\
+        0 & h^2/2 & 4h^2/2 & 9h^2/2 \\
+        0 & h^3/6 & 8h^3/6 & 27h^3/6 \\
+    \end{bmatrix}
+    \begin{bmatrix}
+        a\\b\\c\\d
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        0\\0\\1\\0
+    \end{bmatrix}
+\end{equation}
+to achieve:
+\begin{align}
+    af(x_i) + bf(x_{i+1})+cf(x_{i+2})+df(x_{i+3})
+    &=(0)f(x_i)\\
+    &+(0)f'(x_i)\nonumber\\
+    &+(1)f''(x_i)\nonumber\\
+    &+(0)f'''(x_i)\nonumber\\
+    &+(b + 16c + 81d)h^4f''''(x_i)/24+...\nonumber
+\end{align}
+Solving the problem of Eq.~\ref{eq:find_coeff} yields:
+\begin{equation}
+    \begin{bmatrix}
+        a\\b\\c\\d
+    \end{bmatrix}
+    =
+    \frac{1}{h^2}
+    \begin{bmatrix}
+        1\\-5\\4\\-1
+    \end{bmatrix}
+\end{equation}
+yielding a final approximation:
+\begin{align}\label{eq:final_werror}
+    \frac{1f(x_i) - 5f(x_{i+1})+4f(x_{i+2})-f(x_{i+3})}{h^2}&=f''(x_i)+(\frac{-5+4\times16-1\times81}{24})h^2f''''(x_i)+HOT\nonumber\\
+    \frac{1f(x_i) - 5f(x_{i+1})+4f(x_{i+2})-f(x_{i+3})}{h^2}&=f''(x_i)+\frac{-22}{24}h^2f''''(x_i)+HOT
+\end{align}
+or, for a function $\phi(x)$, to estimate $\frac{d\phi(x_i)}{dx}$ with $\phi(x_i)$, $\phi(x_{i+1})$, $\phi(x_{i+2})$, $\phi(x_{i+3})$:
+\begin{equation}
+    \frac{d\phi(x_i)}{dx}\approx\frac{1\phi(x_i) - 5\phi(x_{i+1})+4\phi(x_{i+2})-1\phi(x_{i+3})}{h^2}
+\end{equation}
+As seen in Eq.~\ref{eq:final_werror}, the most substantial term we were unable to eliminate was $\frac{-22}{24}h^2f''''(x)$, giving this approximation an error on the order $\bigO(h^2)$.\\
+
+To put this another way, suppose that one wished to refine $h$ to achieve an error reduction of $10\times$.
+If an initial approximation with spacing $h_0$ yielded error on the order $\bigO(h_0^2)$, then one could choose $h_1=Ch_0$:
+\begin{align}
+    \bigO(h_0^2)/10&=\bigO(h_1^2)\nonumber\\
+    &=\bigO((Ch_0)^2)\nonumber\\
+    \bigO(h_0^2)/10&=C^2\bigO(h_0^2)\nonumber\\
+    C&=\sqrt{1/10}
+\end{align}
+yielding $h_1=h_0\sqrt{\frac{1}{10}}$.\\
+
+\figref{phi2p} illustrates this approximation used for $\phi(x)=sin(x)$ using different values of $h\in\{1, 0.5, 0.25\}$, and compares to an analytical solution.
+Note how while the solution using the coarsest $h=1$ is extremely rough, every halving of $h$ drastically improves the accuracy of the approximation, with $h=0.25$ already resulting in a very believable approximation.
+\defplot{phi2p}{The second derivative of $\phi(x)=sin(x)$, as found using a finite difference approximation over differing fineness of $h$, compared to the analytical solution $\phi''(x)=-sin(x)$}
+\section{Conclusions}\label{sec:conc}
+
+% \bibliographystyle{sty/ieeetran}
+\pagebreak\printbibliography
+
+\appendix
+\pagebreak
+
+\end{document}
