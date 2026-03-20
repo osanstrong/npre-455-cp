@@ -92,7 +92,7 @@ In this case, by applying the approximation at $x+h$, we can derive the right si
 \end{equation}
 where the boxed term now quantifies the expected difference of Eq~\ref{eq:right}'s approximation from the true $f'(x)$.
 If a small enough $h$ is chosen ($h<1$), we expect $h^2$ to decay faster than $h$ as $h$ decreases, and $h^3$ than $h^2$ and so on.
-Thus, since the lowest power of $h$ an error term in Eq.~\ref{eq:right_error} is $h$, we say that this approximation has an error on the order $\bigO(h)$.\\
+Thus, since the lowest power of $h$ an error term scales with in Eq.~\ref{eq:right_err} is $h$, we say that this approximation has an error on the order $\bigO(h)$.\\
 
 This use of the Taylor series, of course, can be applied to other points than $x+h$:
 \begin{gather*}
@@ -195,7 +195,54 @@ yielding $h_1=h_0\sqrt{\frac{1}{10}}$.\\
 \figref{phi2p} illustrates this approximation used for $\phi(x)=sin(x)$ using different values of $h\in\{1, 0.5, 0.25\}$, and compares to an analytical solution.
 Note how while the solution using the coarsest $h=1$ is extremely rough, every halving of $h$ drastically improves the accuracy of the approximation, with $h=0.25$ already resulting in a very believable approximation.
 \defplot{phi2p}{The second derivative of $\phi(x)=sin(x)$, as found using a finite difference approximation over differing fineness of $h$, compared to the analytical solution $\phi''(x)=-sin(x)$}
+
+\section{Problem 2}
+\FloatBarrier
+\defplot{prob2_setup}{}
+\newcommand{\angFlux}{\psi(\vec{r}, E, \hat{\Omega}, t)}
+\newcommand{\sclFlux}{\phi(\vec{r}, E, t)}
+The aggregate movement of neutrons can be described using the \emph{Neutron Transport Equation}, a balance equation describing the population of neutrons (as angular $\angFlux$ and scalar $\sclFlux$ neutron flux) at a given point, energy, direction, and time:
+\begin{align}
+    \frac{1}{v(E)}\frac{\partial\angFlux}{\partial t} &\qquad \mathrm{Change~in~time}\label{eq:trans_dt}\\ 
+    +\hat{\Omega}\cdot\nabla\angFlux &\qquad \mathrm{Neutron~streaming~loss}\label{eq:trans_stream}\\
+    + \Sigma_t(\vec{r}, E, t)\angFlux &\qquad \mathrm{Collision~loss}\label{eq:trans_coll}\\
+    =&\nonumber\\
+    \int_{4\pi}d\hat{\Omega}\int_0^\infty dE'\Sigma_s(\vec{r}, E'\rightarrow E, \hat{\Omega}'\rightarrow\hat{\Omega},t)\angFlux &\qquad \mathrm{Net~scattering~gain}\label{eq:trans_scat}\\
+    +\frac{\chi_p(E)}{4\pi}\int_0^\infty dE'\nu_p(E')\Sigma_f(\vec{r},E',t)\sclFlux&\qquad \mathrm{Prompt~fission~neutrons}\label{trans_prompt}\\
+    +\sum_{i=1}^{N}\frac{\chi_{d,i}(E)}{4\pi}\lambda_iC_i(\vec{r},t)&\qquad \mathrm{Delayed~fission~neutrons,~}N~\mathrm{groups}\label{eq:trans_delay}\\
+    +s(\vec{r},E,\hat{Omega},t)&\qquad\mathrm{External~sources}\label{eq:trans_ext}
+\end{align}
+However, the angular streaming term introduces complications in actually trying to solve this application.
+A more typical representation of this balance is the \emph{Neutron Diffusion Equation}.
+By assuming that neutron transport follows a \emph{diffusive} process (to express streaming as a function of scalar flux $\sclFlux$), the balance can be written simply with respect to $\phi$:
+\begin{equation}
+    \label{eq:diffusion}
+    \frac{1}{v}\frac{\partial \phi(\vec{r},t)}{\partial t}
+\end{equation}
+The formulation of the diffusion equation in Eq.~\ref{eq:diffusion} also assumes neutrons are all the same speed and not split into multiple ``groups'' of energy $E$ (the one-group model).
+This assumption also serves to simplify calculations, but is not as crucial as the diffusion assumption, and could still be split back up into multiple energy groups for a more accurate representation.\\
+
+In a more precise derivation, the neutron diffusion equation can be found by taking two moments, an integral over angle (zeroth moment) and an integral of the function times angle, over angle (first moment), then introducing the assumption that flux is \emph{linearly anisotropic}. This is by far the greatest assumption which simplifies the neutron transport equation to the neutron diffusion equation: that is, while not necessarily perfectly uniform over angle, the flux can at least be described by a linear function of angle.
+This report focuses primarily on the application of the end diffusion equation, but a step-by-step explanation of this derivation may be found at [LINK FULL EXPLANATION]
+For the purposes of this report, the following limitations are most crucial:
+\begin{itemize}
+    \item The diffusion equation fails if there is no medium to scatter in, like a vacuum.
+    \item Near strong sources or sinks of neutrons, there is a strong preferential direction for neutrons which breaks linear anisotropy.
+    \item Strong spatial variations in general tend to introduce stronger angular dependence than our assumption permits.
+    \item Near (within several mean free paths of) problematic boundaries or discontinuities, such as a vacuum, where neutrons that scatter in that direction wouldn't come back.
+\end{itemize}
+
+Even with these limitations, the neutron diffusion equation can still be a very effective model of scalar neutron flux.
+A typical process to solve neutronics problems analytically using this equation is to split the problem into regions of uniform or simply-distributed properties.
+Over each region $i$, a flux $\phi_i$ is then expected (if reasonable) to follow the neutron diffusion equation.
+For a steady state problem, in which the time derivative (\ref{eq:trans_dt}) can be neglected, there remains only the second-degree spatial derivative of $\phi$, requiring two known boundary conditions to analytically resolve that solution.
+Between regions, 
+
+For a non-multiplying system (with no fission), $\Sigma_t$ in \ref{eq:trans_coll} simplifies to simply absorption $\Sigma_a$, and the prompt and delayed fission sources \ref{trans_prompt} and \ref{eq:trans_delay} can be ignored.
+For a system in steady state that's non-multiplying, we can also ignore the time dependence in \ref{eq:trans_dt}.
 \section{Conclusions}\label{sec:conc}
+
+
 
 % \bibliographystyle{sty/ieeetran}
 \pagebreak\printbibliography
