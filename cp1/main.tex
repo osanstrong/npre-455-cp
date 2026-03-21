@@ -198,7 +198,6 @@ Note how while the solution using the coarsest $h=1$ is extremely rough, every h
 
 \section{Problem 2}
 \FloatBarrier
-\defplot{prob2_setup}{}
 \newcommand{\angFlux}{\psi(\vec{r}, E, \hat{\Omega}, t)}
 \newcommand{\sclFlux}{\phi(\vec{r}, E, t)}
 The aggregate movement of neutrons can be described using the \emph{Neutron Transport Equation}, a balance equation describing the population of neutrons (as angular $\angFlux$ and scalar $\sclFlux$ neutron flux) at a given point, energy, direction, and time:
@@ -207,7 +206,7 @@ The aggregate movement of neutrons can be described using the \emph{Neutron Tran
     +\hat{\Omega}\cdot\nabla\angFlux &\qquad \mathrm{Neutron~streaming~loss}\label{eq:trans_stream}\\
     + \Sigma_t(\vec{r}, E, t)\angFlux &\qquad \mathrm{Collision~loss}\label{eq:trans_coll}\\
     =&\nonumber\\
-    \int_{4\pi}d\hat{\Omega}\int_0^\infty dE'\Sigma_s(\vec{r}, E'\rightarrow E, \hat{\Omega}'\rightarrow\hat{\Omega},t)\angFlux &\qquad \mathrm{Net~scattering~gain}\label{eq:trans_scat}\\
+    \int_{4\pi}d\hat{\Omega}\int_0^\infty dE'\Sigma_s(\vec{r}, E'\rightarrow E, \hat{\Omega}'\rightarrow\hat{\Omega},t)\angFlux &\qquad \mathrm{Scattering~to~energy}~E\label{eq:trans_scat}\\
     +\frac{\chi_p(E)}{4\pi}\int_0^\infty dE'\nu_p(E')\Sigma_f(\vec{r},E',t)\sclFlux&\qquad \mathrm{Prompt~fission~neutrons}\label{trans_prompt}\\
     +\sum_{i=1}^{N}\frac{\chi_{d,i}(E)}{4\pi}\lambda_iC_i(\vec{r},t)&\qquad \mathrm{Delayed~fission~neutrons,~}N~\mathrm{groups}\label{eq:trans_delay}\\
     +s(\vec{r},E,\hat{Omega},t)&\qquad\mathrm{External~sources}\label{eq:trans_ext}
@@ -243,6 +242,11 @@ Between regions $a$ and $b$ which meet at $S_{ab}$, we can apply conservation ba
     \item Flux described by both regions' $\phi_i\rt$ should agree at their interface: $\phi_a\rt=\phi_b\rt,{\hat{r}\in S_{ab}}$
 \end{itemize}
 
+\FloatBarrier
+
+\defplot{prob2_setup}{The (symmetric) geometry of Problem~2: A central source, then one slab of Material~A, then a slab of Material~B before vacuum.}
+
+
 For a non-multiplying system (with no fission), $\Sigma_t$ in \ref{eq:trans_coll} simplifies to simply absorption $\Sigma_a$, and the prompt and delayed fission sources \ref{trans_prompt} and \ref{eq:trans_delay} can be ignored.
 For a system in steady state that's non-multiplying, we can also ignore the time dependence in \ref{eq:trans_dt}.
 
@@ -251,8 +255,22 @@ Consider again the diffusion equation as found in Eq.~\ref{eq:diffusion}:
     \frac{1}{v}\frac{\partial \phi\rt}{\partial t}-\nabla\cdot D\nabla\phi\rt + \Sigma_a\rt\phi\rt = \nu_p\Sigma_f\rt\phi\rt + \sum_{i=1}^{N}\lambda_iC_i\rt + s\rt
 \end{equation*}
 
+\newcommand{\ddx}{\frac{\partial}{\partial x}}
 To solve using a finite difference method, we replace each derivative with a finite difference approximation.
-For the purposes of this report, we will employ a two node central difference approximation in space, for simplicity.
+In an analytical solution where one would consider separate equations for each uniform region, then for each equation $D$ does not change with respect to position and $-\nabla D\nabla\phi\rt$ can be simplified to $-D\nabla^2\phi\rt$ (in the above 1D case, $-D\frac{\partial^2\phi\rt}{\partial x^2}$).
+To use a finite difference method, with \emph{one} equation accounting for spatial variation in $D$ across the material, then this assumption must be withheld to find a \emph{conservative} finite difference approximation of $-\nabla D\nabla\phi\rt$:
+\begin{align}
+    -\nabla D\nabla\phi &= \nabla J\\
+%% TODO: Actually finish this derivation hell hell hell hel surffering
+\end{align}
+\newcommand{\pfrac}{\left(\frac{D_{i+1}}{D_i+D_{i+1}}\right)}
+\newcommand{\mfrac}{\left(\frac{D_{i-1}}{D_i+D_{i-1}}\right)}
+\begin{equation}
+    \left[-\ddx D\ddx\phi\right]_i = -\frac{D_i}{h^2/2}\left(\pfrac\left(\phi_{i+1}-\phi_i\right)+\mfrac\left(\phi_{i-1}-\phi_i\right)\right) 
+\end{equation}
+plugging this into 
+
+
 \section{Conclusions}\label{sec:conc}
 
 
