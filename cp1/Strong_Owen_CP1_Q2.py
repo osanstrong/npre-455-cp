@@ -2,6 +2,8 @@ import numpy as np
 from numpy import cosh, sinh
 import matplotlib.pyplot as plt
 
+import scipy.stats as stat
+
 # Finite difference solution 
 D1 = 1 # cm
 L1 = 10
@@ -163,3 +165,25 @@ plt.xlabel("x (cm)")
 plt.ylabel("Flux (neutrons/cm2/s)")
 plt.legend()
 plt.show()
+
+
+err_N = [25, 50, 100, 200, 400, 800, 1600]
+err_xv = [np.linspace(0, a+b, Nv+1) for Nv in err_N]
+err_sols = [fin_diff_sol(Nv) for Nv in err_N]
+tar_sols = [np.array([phi_a(xv) for xv in xvals]) for xvals in err_xv]
+def err(actual, target):
+    diff = actual-target
+    return np.linalg.norm(diff) / np.linalg.norm(target)
+
+err_errs = [err(err_sols[i], tar_sols[i]) for i in range(len(err_N))]
+
+res = stat.linregress(np.log(err_N), np.log(err_errs))
+print(res)
+# LinregressResult(slope=-1.0091264964866835, intercept=-0.2527060789232243, rvalue=-0.9994067245685468, pvalue=1.64610185963301e-08, stderr=0.015552388491767849, intercept_stderr=0.08517539132364403)
+# Observed order: -1.01
+plt.plot(err_N, err_errs, label="Finite Difference solutions")
+plt.xlabel("Number of slots N")
+plt.ylabel("Normalized error")
+plt.legend()
+plt.show()
+
