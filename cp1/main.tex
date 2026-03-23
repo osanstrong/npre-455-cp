@@ -55,7 +55,7 @@
 \end{abstract}
 
 \section{Introduction}
-\section{Problem 1}
+\section{Problem 1: Finite Difference Overview}
 % Theory behind finite difference methods
 In engineering mathematics, a number of differential equations prove undesirable to solve using analytic techniques.
 A common practical technique to solve problems using these equations is instead to use a ``finite difference'' approximation scheme, in which derivatives are approximated using finite differential quotients.\\
@@ -196,7 +196,7 @@ yielding $h_1=h_0\sqrt{\frac{1}{10}}$.\\
 Note how while the solution using the coarsest $h=1$ is extremely rough, every halving of $h$ drastically improves the accuracy of the approximation, with $h=0.25$ already resulting in a very believable approximation.
 \defplot{phi2p}{The second derivative of $\phi(x)=sin(x)$, as found using a finite difference approximation over differing fineness of $h$, compared to the analytical solution $\phi''(x)=-sin(x)$}
 
-\section{Problem 2}
+\section{Problem 2: Non-multiplying Systems}
 \FloatBarrier
 \newcommand{\angFlux}{\psi(\vec{r}, E, \hat{\Omega}, t)}
 \newcommand{\sclFlux}{\phi(\vec{r}, E, t)}
@@ -270,7 +270,15 @@ To use a finite difference method, with \emph{one} equation accounting for spati
 \end{equation}
 plugging this into 
 
+\FloatBarrier
+\section{Problem 3: Multiplying Systems}
 
+
+% K results 
+% a (cm) & b (cm) & Numerical Solutions &&&&& Analytical
+% 10 & 50 & 0.96688 & 0.97559 & 0.97257 & 0.97407 & 0.97331 & \\
+% 25 & 50 & 1.00042 & 0.99925 & 0.99981 & 0.99951 & 0.99966 & \\
+% 50 & 50 & 1.00858 & 1.00828 & 1.00812 & 1.00804 & 1.00800 & \\
 \section{Conclusions}\label{sec:conc}
 
 
