@@ -35,49 +35,31 @@ def geom(N, a, b):
 
 def fin_diff_mats(N, a, b):
     # For given dimensions, with N cells
-    # h = (a+b)/N
     h, D, Xa, Xf = geom(N, a, b)
     M_mat = np.eye(N+1)
 
 
-
-    # b_mat = np.zeros(N+1)
     F_mat = np.zeros((N+1, N+1))
-    # for i in range(1:N):
     for i in range(1, N):
         F_mat[i,i] = nu*Xf[i]
-    # b_mat[1:N] = np.array(S_vals[1:N])
 
     M_mat[0,0:3] = [-3, 4, -1]
-    # M_mat[0,0:4] = [-11, 18, -9, 2]
     for i in range(1,N):
-        # lD = D[i-1]
-        # iD = D[i]
-        # rD = D[i+1]
-        # # lfrac = lD/(iD+lD)
-        # # rfrac = rD/(iD+rD)
-        # # print(F"D: {lD}, {iD}, {rD}")
-        # # hD = iD / (0.5 * h**2)
+        lD = D[i-1]
+        iD = D[i]
+        rD = D[i+1]
+        lfrac = lD/(iD+lD)
+        rfrac = rD/(iD+rD)
 
         vals = (D[i]/(h**2/2)) * np.array([
-            -D[i-1]/(D[i]+D[i-1]),
-            D[i-1]/(D[i]+D[i-1]) + D[i+1]/(D[i]+D[i+1]),
-            -D[i+1]/(D[i]+D[i+1])
+            -lfrac,
+            lfrac + rfrac,
+            -rfrac
         ]) + np.array([
             0, Xa[i], 0
         ])
-        # print(f"Vals: {vals}")
         M_mat[i,i-1:i+2] = vals
     return M_mat, F_mat
-    # A_mat[N,N] = 1
-    # print("_"*10)
-    # print(f"N={N}, bound={bound}")
-    # print(f"A: {A_mat}")
-    # print(f"b: {b_mat}")
-    # print(f"S: {S_vals}")
-    # phi = np.linalg.solve(A_mat, b_mat)
-    # # phi = np.invert(A_mat) * b_mat
-    # return phi
 
 def err(actual, target):
     diff = actual-target
@@ -88,8 +70,7 @@ def Rf(phi: np.ndarray, Xf:np.ndarray, h):
     For given flux and fission cross section find fission reaction rate
     Uses trapezoidal integration across phi and
     '''
-    # x = [h*i for i in length()]
-    Rf = sum([0.5*(phi[i-1]*Xf[i-1]+phi[i]*Xf[i])*h for i in range(1,len(Xf))]) #Ignore first node bc cell
+    Rf = sum([0.5*(phi[i-1]*Xf[i-1]+phi[i]*Xf[i])*h for i in range(1,len(Xf))])
     # print(f"Rf: {f}")
     return Rf
     
@@ -109,11 +90,7 @@ def powit_kPhi(M:np.ndarray, F:np.ndarray, h:float, Xf:np.ndarray|None=None):
     eps = 1e-6
 
     N_ITER = 1000
-    # print(f"lk: {lk}")
     iM = la.inv(M)
-    # print(f"iM: {iM.shape}, F: {F.shape}")
-    # print(f"phi0: {lphi}, {lphi.shape}")
-    # print(f"next phi: {(F @ lphi).shape}")
     for i in range(N_ITER):
 
         nphi = iM @ (F @ lphi) / lk
@@ -224,5 +201,6 @@ for i in range(len(ab_vals)):
 
     plt.xlabel("x (cm)")
     plt.ylabel("Normalized flux")
+    plt.grid(which="both")
     plt.legend()
     plt.show()

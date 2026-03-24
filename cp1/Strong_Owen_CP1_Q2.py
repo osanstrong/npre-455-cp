@@ -100,18 +100,31 @@ for N in NL:
     print(phi)
     plt.plot(x, phi, label=f"Numerical, N = {N}")
 
+# Isolated: Code which solves for coefficients C1 and C2
+# import sympy as sp
+# from sympy import sinh, cosh
 
-# def gen_fin_diff(D_vals:np.ndarray, L_vals:np.ndarray, S_left):
-#     mat = np.zeros([D_vals.size]*2)
+# B, M, N = sp.symbols("B M N")
 
-#     pass
+# D1, L1, X1, S, D2, L2 = sp.symbols("D1 L1 X1 S D2 L2")
 
+# a, b, x = sp.symbols("a b x")
 
-# Plot vs analytic
+# phi1 = B*cosh(x/L1) + S/X1
+# phi2 = M*sinh((x-(a+b))/L2)
+# dphi1 = sp.derive_by_array(phi1, x)
+# dphi2 = sp.derive_by_array(phi2, x)
 
-B = -D2*L1*S*cosh(b/L2)/(X1*(D1*L2*sinh(a/L1)*sinh(b/L2) + D2*L1*cosh(a/L1)*cosh(b/L2)))
-M = -D1*L2*S*sinh(a/L1)*cosh((a + b)/L2)/(X1*(D1*L2*sinh(a/L1)*sinh(b/L2) + D2*L1*cosh(a/L1)*cosh(b/L2)))
-N = D1*L2*S*sinh(a/L1)*sinh((a + b)/L2)/(X1*(D1*L2*sinh(a/L1)*sinh(b/L2) + D2*L1*cosh(a/L1)*cosh(b/L2)))
+# e1 = sp.simplify((phi1 - phi2).subs(x, a))
+# e2 = sp.simplify((D1*dphi1 - D2*dphi2).subs(x, a))
+
+# sol = sp.solve((e1, e2), (B, M))
+# print(f"B = {sp.simplify(sol[B])}")
+# print(f"M = {sp.simplify(sol[M])}")
+
+C2 = -D2*L1*S*cosh(b/L2)/(X1*(D1*L2*sinh(a/L1)*sinh(b/L2) + D2*L1*cosh(a/L1)*cosh(b/L2)))
+C3 = -D1*L2*S*sinh(a/L1)/(X1*(D1*L2*sinh(a/L1)*sinh(b/L2) + D2*L1*cosh(a/L1)*cosh(b/L2)))
+
 
 N_PER_CM = 10
 xa = np.linspace(0, a+b, (a+b)*N_PER_CM+1)
@@ -122,9 +135,10 @@ xa2 = xa[a*N_PER_CM:]
 # phi[a*N_PER_CM:] = M*sinh(xa2/L2) + N*cosh(xa2/L2)
 def phi_a(xv):
     if xv <= a:
-        return B*cosh(xv/L1) + S/X1
+        return C2*cosh(xv/L1) + S/X1
     else:
-        return M*sinh(xv/L2) + N*cosh(xv/L2)
+        # return M*sinh(xv/L2) + N*cosh(xv/L2)
+        return C3*sinh((xv-a-b)/L2)
 def D_a(xv):
     if xv <= a:
         return D1
@@ -161,6 +175,7 @@ plt.plot(xa, phi, label="Analytical")
 
 vbar(a, label=f"a ({a} cm)", c='C1')
 vbar(a+b, label=f"a+b (b = {b} cm)", c="C2")
+plt.grid()
 plt.xlabel("x (cm)")
 plt.ylabel("Flux (neutrons/cm2/s)")
 plt.legend()
@@ -178,12 +193,15 @@ def err(actual, target):
 err_errs = [err(err_sols[i], tar_sols[i]) for i in range(len(err_N))]
 
 res = stat.linregress(np.log(err_N), np.log(err_errs))
-print(res)
+order = -res.slope
+print(f"Order: {order}")
 # LinregressResult(slope=-1.0091264964866835, intercept=-0.2527060789232243, rvalue=-0.9994067245685468, pvalue=1.64610185963301e-08, stderr=0.015552388491767849, intercept_stderr=0.08517539132364403)
 # Observed order: -1.01
-plt.plot(err_N, err_errs, label="Finite Difference solutions")
+plt.plot(err_N, err_errs, label=f"Finite Difference solutions O(h^{order:.3f})")
 plt.xlabel("Number of slots N")
-plt.ylabel("Normalized error")
+plt.ylabel(f"Normalized error")
+plt.loglog()
+plt.grid(which="both")
 plt.legend()
 plt.show()
 
