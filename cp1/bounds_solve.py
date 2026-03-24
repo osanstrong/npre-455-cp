@@ -83,7 +83,7 @@ L2 = (D2/Xa2)**0.5
 # Solve for b that makes critical for given a
 a_vals = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
 a_vals = [10, 25, 50]
-B1 = (nu*Xf1 - Xa1)/D1 # for k to == 1
+B1 = ((nu*Xf1 - Xa1)/D1)**0.5 # for k to == 1
 for a in a_vals:
     # eq_b = -sinh((a+b)/L2)*(B1*D1*L2*sin(B1*a)*cosh(a/L2) + D2*cos(B1*a)*sinh(a/L2)) + cosh((a+b)/L2)*(B1*D1*L2*sin(B1*a)*sinh(a/L2) + D2*cos(B1*a)*cosh(a/L2))
 
