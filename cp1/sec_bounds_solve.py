@@ -64,26 +64,18 @@ x = Sym("x")
 # print(cc_expr)
 
 
-# D1_val = 0.79 # cm
-# Xa1 = 0.066 # 1/cm
-# Xf1_val = 0.02787
-# nu = 2.4
-# L1_val = (D1_val/Xa1)**0.5
+D1_val = 0.79 # cm
+Xa1 = 0.066 # 1/cm
+Xf1_val = 0.02787
+nu = 2.4
+L1_val = (D1_val/Xa1)**0.5
 
-# D2_val = 1
-# Xa2 = 0.000709 # still 1/cm
-# L2_val = (D2_val/Xa2)**0.5
+D2_val = 1
+Xa2 = 0.000709 # still 1/cm
+L2_val = (D2_val/Xa2)**0.5
 
 # # print(dphi1)
-# subs_b = { # known that critical, solve for b given a
-# D1 : D1_val, # cm
-# D2 : D2_val,
-# Xf1 : Xf1_val,
-# B : (nu*Xf1_val - Xa1)/D1_val,
-# a : 50,
-# L1 : L1_val,
-# L2 : L2_val
-# }
+# subs_b = 
 
 # cc_b = cc_expr.subs([(k, subs_b[k]) for k in subs_b])
 # b = sp.nsolve(cc_b, [0, 100], solver="bisect", verify=False)
@@ -92,8 +84,10 @@ x = Sym("x")
 
 phi1 = N*cos(B*x)
 dphi1 = sp.derive_by_array(phi1, x)
+iphi1 = (N/B)*sin(B*x)
 phi2 = P*sinh((x-(a+b))/L2)
 dphi2 = sp.derive_by_array(phi2, x)
+iphi2 = L2*P*cosh((x-(a+b))/L2)
 
 e1 = phi1.subs(x, a) - phi2.subs(x, a)
 e2 = -D1*dphi1.subs(x, a) + D2*dphi2.subs(x, a)
@@ -102,5 +96,26 @@ cc_expr = e2
 ncc_expr = e2 if cc_expr == e1 else e1
 
 PN = sp.simplify(sp.solve(cc_expr, P)[0])
+print(f"P = {PN}")
 print(ncc_expr.subs(P, PN))
+
+B_val = (nu*Xf1_val - Xa1)/D1_val
+flux_subs = lambda a_val, b_val: { # known that critical, solve for b given a
+D1 : D1_val, # cm
+D2 : D2_val,
+Xf1 : Xf1_val,
+B : B_val,
+a : a_val,
+b : b_val,
+L1 : L1_val,
+L2 : L2_val
+}
+
+Rf = sp.simplify(Xf1*(iphi1.subs(x, a) - iphi1.subs(x, 0)))
+Rf_o_N = sp.simplify(Rf/N)
+print(f"Rf: {Rf_o_N}")
+ab_vals = [(10, 50), (25, 50), (50, 50)]
+for a_val, b_val in ab_vals:
+    N_val = 1 / (Rf_o_N.evalf(subs=flux_subs(a_val, b_val)))
+    print(f"a={a_val}, b={b_val}, N: {N_val}")
 
