@@ -14,8 +14,6 @@ D2 = 1
 Xa2 = 0.000709 # still 1/cm
 L2 = (D2/Xa2)**0.5
 
-# a = 10 # cm
-# b = 20
 def geom(N, a, b):
     h = (a+b)/N
     bound = int(N*a/(a+b))+1
@@ -75,7 +73,7 @@ def Rf(phi: np.ndarray, Xf:np.ndarray, h):
     return Rf
     
 
-def powit_kPhi(M:np.ndarray, F:np.ndarray, h:float, Xf:np.ndarray|None=None):
+def powit_kPhi(M:np.ndarray, F:np.ndarray, h:float, Xf:np.ndarray|None=None, debug=False):
     '''
     For given M and F operators, power iterate to find k values and normalized flux vector.
     
@@ -104,12 +102,12 @@ def powit_kPhi(M:np.ndarray, F:np.ndarray, h:float, Xf:np.ndarray|None=None):
         conv_phi = err(nphi, lphi)
 
         if conv_k < eps and conv_phi < eps:
-            print(f"k: {nk} after {i} iterations")
+            if debug: print(f"k: {nk} after {i} iterations")
             return nk, nphi
         else:
             lk = nk
             lphi = nphi
-    print(f"Unable to converge in {N_ITER} iterations")
+    if debug: print(f"Unable to converge in {N_ITER} iterations")
     return None, None
         
 
@@ -134,13 +132,9 @@ def xPhi_an(av, bv, k):
 
     B = ((nu*Xf1/k - Xa1)/D1)**0.5
 
-    unscl_Rf = (Xf1*np.sin(B*av)/B)#*av
-    print(f"Rf = {unscl_Rf}")
-    C1 = 1  / unscl_Rf
-    # C2 = -B*D1*L2*C1*np.sin(B*av)/(D2*np.cosh(bv/L2))
-    
+    unscl_Rf = (Xf1*np.sin(B*av)/B)
+    C1 = 1  / unscl_Rf    
     C2 = C1* np.cos(B*av) / (np.sinh(-bv/L2))
-    print(f"{C1*np.cos(B*av)} vs {C2*np.sinh(-bv/L2)}")
 
     phi[:bound] = C1*np.cos(B*x1)
     phi[bound:] = C2*np.sinh((x2-(av+bv))/L2)
@@ -150,7 +144,6 @@ def vbar(x, label, c=None, style="dashed"):
     [ymin, ymax] = plt.ylim()
     plt.vlines(x, ymin, ymax, label=label, colors=c, linestyles=style)
     plt.ylim(ymin, ymax)
-# a, b = ab_vals[0]
 
 
 phis_for_N = []
@@ -169,12 +162,12 @@ for i in range(len(NL)):
         ks.append(k)
     phis_for_N.append(phis)
     ks_for_N.append(ks)
-
+print(f" a &  b & N = " + "  & N = ".join([str(N) for N in NL]) + " & Analytic\\\\")
 for i in range(len(ab_vals)):
     a, b = ab_vals[i]
     ks_for_ab = [ks_for_N[j][i] for j in range(len(NL))]
     strs = [f"& {k:.5f}" for k in ks_for_ab]
-    print(f"{a} & {b} "+" ".join(strs)+"\\\\")
+    print(f"{a} & {b} "+" ".join(strs)+f" & {k_vals[i]:.5f} \\\\")
 
     # print(f"x: {x}")
     # print(f"phi: {phi}")
