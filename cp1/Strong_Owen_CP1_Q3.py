@@ -35,9 +35,17 @@ def geom(N, a, b):
 
 def fin_diff_mats(N, a, b):
     # For given dimensions, with N cells
+<<<<<<< HEAD
     h, D, Xa, Xf = geom(N, a, b)
     M_mat = np.eye(N+1)
 
+=======
+    # h = (a+b)/N
+    h, D, Xa, Xf = geom(N, a, b)
+    M_mat = np.eye(N+1)
+
+
+>>>>>>> c12540efb78074bce5123d816e077ef8641e9462
 
     F_mat = np.zeros((N+1, N+1))
     for i in range(1, N):
@@ -66,11 +74,17 @@ def err(actual, target):
     return np.linalg.norm(diff) / np.linalg.norm(target)
 
 def Rf(phi: np.ndarray, Xf:np.ndarray, h):
+<<<<<<< HEAD
     '''
     For given flux and fission cross section find fission reaction rate
     Uses trapezoidal integration across phi and
     '''
     Rf = sum([0.5*(phi[i-1]*Xf[i-1]+phi[i]*Xf[i])*h for i in range(1,len(Xf))])
+=======
+    '''For given flux and fission cross section find fission reaction rate'''
+    
+    Rf = sum([0.5*(phi[i-1]+phi[i])*0.5*(Xf[i-1]+Xf[i])*h for i in range(1,len(Xf))]) #Ignore first node bc cell
+>>>>>>> c12540efb78074bce5123d816e077ef8641e9462
     # print(f"Rf: {f}")
     return Rf
     
