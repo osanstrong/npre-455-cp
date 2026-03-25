@@ -26,7 +26,7 @@
         \centering
         \includegraphics[width=#3\linewidth]{fig/#1.png}
         \caption{#2}
-        \newcommand{\tmplabel}{fig:#1}
+        \newcommand{\tmplabel}{#1}
         \label{\tmplabel}
     \end{figure}
 }
@@ -248,14 +248,55 @@ Between regions $a$ and $b$ which meet at $S_{ab}$, we can apply conservation ba
 
 
 For a non-multiplying system (with no fission), $\Sigma_t$ in \ref{eq:trans_coll} simplifies to simply absorption $\Sigma_a$, and the prompt and delayed fission sources \ref{trans_prompt} and \ref{eq:trans_delay} can be ignored.
-For a system in steady state that's non-multiplying, we can also ignore the time dependence in \ref{eq:trans_dt}.
+For a system in steady state, we can also ignore the time dependence in \ref{eq:diffusion}:
+\begin{equation}
+    \label{eq:nonmult-diff}
+    -\nabla\cdot D\nabla\phi\rt + \Sigma_a\rt\phi\rt = s\rt
+\end{equation}
+
+\newcommand{\ddx}{\frac{\partial}{\partial x}}
+\newcommand{\ddxx}{\frac{\partial^2}{\partial x^2}}
+Thus, consider the 1D system in \figref{prob2_setup}.
+To analytically solve for this distribution, one may first split the problem into two equations, one for each materially uniform region.
+For region~1, with uniform properties, with a uniform distributed source S:
+\begin{align}
+    -\ddx D_1\ddx\phi_1 + \Sigma_{a1}\phi_1 &= S \nonumber\\
+    \ddxx\phi_1 - \frac{\Sigma_{a1}}{D_1}\phi_1 &= -\frac{S}{D_1} \nonumber\\
+    \label{eq:reg1-source}
+    \ddxx\phi_1 - \frac{1}{L_1^2}\phi_1 &= -\frac{S}{D_1}
+\end{align}
+and got region 2, without such a source:
+\begin{equation}
+    \label{eq:reg2}
+    \ddxx\phi_2 - \frac{1}{L_2^2}\phi_2 &= 0
+\end{equation}
+First, consider the region~1 flux $\phi_1$.
+Eq.~\ref{eq:reg1-source} is not homogeneous (having the term $\frac{S}{D_1}$ independent of flux $\phi_1$), but can be split into a homogenous component solution $\phi_h$ and a particular solution $\phi_p$
+\begin{equation}
+    \label{eq:homo-part}
+    \phi_1 = \phi_h + \phi_p
+\end{equation}
+\begin{align}
+    \label{eq:homo}
+    \ddxx \phi_h - \frac{1}{L_1^2}\phi_h &= 0 \\
+    \label{eq:partic}
+    \ddxx \phi_p - \frac{1}{L_1^2}\phi_p &= -\frac{S}{D_1}
+\end{align}
+To solve for the particular solution, we could consider a wide range of functions whose differentials could somehow combine to produce the inhomogeneous term $-\frac{S}{D_1}$.
+In this case, since the inhomogeneous term is a constant, we could first try simply a constant function $\phi_p(x)=A$:
+\begin{align}
+    \phi_p(x)&=A
+    \ddxx A - \frac{1}{L_1^2}A &= -\frac{S}{D_1}\nonumber\\
+    \frac{\Sigma_{a1}}{D_1}A &= \frac{S}{D_1}\nonumber\\
+    A &= \frac{S}{\Sigma_{a1}}\\
+    \rightarrow\phi_p &= \frac{S}{\Sigma_{a1}}
+\end{align}
 
 Consider again the diffusion equation as found in Eq.~\ref{eq:diffusion}:
 \begin{equation*}
     \frac{1}{v}\frac{\partial \phi\rt}{\partial t}-\nabla\cdot D\nabla\phi\rt + \Sigma_a\rt\phi\rt = \nu_p\Sigma_f\rt\phi\rt + \sum_{i=1}^{N}\lambda_iC_i\rt + s\rt
 \end{equation*}
 
-\newcommand{\ddx}{\frac{\partial}{\partial x}}
 To solve using a finite difference method, we replace each derivative with a finite difference approximation.
 In an analytical solution where one would consider separate equations for each uniform region, then for each equation $D$ does not change with respect to position and $-\nabla D\nabla\phi\rt$ can be simplified to $-D\nabla^2\phi\rt$ (in the above 1D case, $-D\frac{\partial^2\phi\rt}{\partial x^2}$).
 To use a finite difference method, with \emph{one} equation accounting for spatial variation in $D$ across the material, then this assumption must be withheld to find a \emph{conservative} finite difference approximation of $-\nabla D\nabla\phi\rt$:
@@ -272,6 +313,13 @@ plugging this into
 
 \FloatBarrier
 \section{Problem 3: Multiplying Systems}
+
+Consider again the neutron diffusion equation seen in Eq.~\ref{eq:diffusion}, this time simplified by assuming no external sources or delayed neutron production are present, but with considerable prompt fission:
+\begin{equation}
+    \label{eq:multiplying-diff}
+    \frac{1}{v}\frac{\partial \phi}{\partial t} -\nabla\cdot D\nabla\phi\rt + \Sigma_a\rt\phi\rt = \nu\Sigma_f\rt\phi\rt
+\end{equation}
+\subsection{}
 
 % Critical a when no multiplier: 46.85187 cm (\cos\left(Ba\right) = 0)
 % Critical a as b approaches inf: 20.01961 cm (B\tan\left(Ba\right) = \frac{1}{L_{2}} )
