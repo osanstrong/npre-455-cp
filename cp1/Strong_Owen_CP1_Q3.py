@@ -171,8 +171,27 @@ for i in range(len(ab_vals)):
     strs = [f"& {k:.5f}" for k in ks_for_ab]
     print(f"{a} & {b} "+" ".join(strs)+f" & {k_vals[i]:.5f} \\\\")
 
-    # print(f"x: {x}")
-    # print(f"phi: {phi}")
+# Solve for b required to reach criticality for different a
+# Solving criticality condition c(b)=0 = -BD_1
+a_vals = [5*i for i in range(1,11)]
+def crit_b(av):
+    return L2*np.arctanh(D2 / (B_crit*D1*L2*np.tan(B_crit*av)))
+crit_bvals = []
+for av in a_vals:
+    bv = crit_b(av)
+    res = ""
+    if np.isnan(bv):
+        res = "$k<1$"
+    elif bv < 0:
+        res = "$k>1$"
+    else:
+        res = f"{bv:.3f}"
+    crit_bvals.append(res)
+print("Critical values of b for given a")
+print("a (cm) & " + " & ".join([str(av) for av in a_vals]) + "\\\\")
+print("b (cm) & " + " & ".join(crit_bvals))
+    
+
 for i in range(len(ab_vals)):
     a, b = ab_vals[i]
     
@@ -198,7 +217,6 @@ for i in range(len(ab_vals)):
     plt.ylabel("Normalized flux")
     plt.grid(which="both")
     plt.legend()
-    plt.show()
+    # plt.show()
 
-# Solve for b required to reach criticality for different a
-a_vals = []
+

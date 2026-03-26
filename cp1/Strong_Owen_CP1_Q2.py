@@ -18,7 +18,7 @@ b = 20
 
 NL = [5, 10, 20, 40]
 
-def fin_diff_sol(N):
+def fin_diff_sol(N, debug=False):
     h = (a+b)/N
     A_mat = np.eye(N+1)
 
@@ -41,6 +41,7 @@ def fin_diff_sol(N):
     b_mat = np.zeros(N+1)
     b_mat[1:N] = np.array(S_vals[1:N])
 
+    # A_mat[0,0:2] = [-1, 1]
     A_mat[0,0:3] = [-3, 4, -1]
     # A_mat[0,0:4] = [-11, 18, -9, 2]
     for i in range(1,N):
@@ -50,7 +51,7 @@ def fin_diff_sol(N):
         iL = L[i]
         lfrac = lD/(iD+lD)
         rfrac = rD/(iD+rD)
-        print(F"D: {lD}, {iD}, {rD}")
+        # print(F"D: {lD}, {iD}, {rD}")
         hD = iD / (0.5 * h**2)
         # A_mat[i,i-1:i+2] = np.array([
         #     -hD*lfrac,
@@ -65,7 +66,7 @@ def fin_diff_sol(N):
         ]) + np.array([
             0, X[i], 0
         ])
-        print(f"Vals: {vals}")
+        # print(f"Vals: {vals}")
         A_mat[i,i-1:i+2] = vals
         # A_mat[i,i-1:i+2] = (D[i]/(h**2/2)) * np.array([
         #     -D[i-1]/(D[i]+D[i-1]),
@@ -84,11 +85,12 @@ def fin_diff_sol(N):
     #     0.25 + 0.5*D[N]/h
     # ]
     A_mat[N,N] = 1
-    print("_"*10)
-    print(f"N={N}, bound={bound}")
-    print(f"A: {A_mat}")
-    print(f"b: {b_mat}")
-    print(f"S: {S_vals}")
+    if (debug):
+        print("_"*10)
+        print(f"N={N}, bound={bound}")
+        print(f"A: {A_mat}")
+        print(f"b: {b_mat}")
+        print(f"S: {S_vals}")
     phi = np.linalg.solve(A_mat, b_mat)
     # phi = np.invert(A_mat) * b_mat
     return phi
@@ -96,8 +98,9 @@ def fin_diff_sol(N):
 for N in NL:
     x = np.linspace(0, a+b, N+1)
     phi = fin_diff_sol(N)
-    print(x)
-    print(phi)
+    # phi /= np.linalg.norm(phi, 1)
+    # print(x)
+    # print(phi)
     plt.plot(x, phi, label=f"Numerical, N = {N}")
 
 # Isolated: Code which solves for coefficients C1 and C2
@@ -183,6 +186,7 @@ plt.show()
 
 
 err_N = [25, 50, 100, 200, 400, 800, 1600]
+err_h = [(a+b)/Nv for Nv in err_N]
 err_xv = [np.linspace(0, a+b, Nv+1) for Nv in err_N]
 err_sols = [fin_diff_sol(Nv) for Nv in err_N]
 tar_sols = [np.array([phi_a(xv) for xv in xvals]) for xvals in err_xv]
@@ -192,13 +196,13 @@ def err(actual, target):
 
 err_errs = [err(err_sols[i], tar_sols[i]) for i in range(len(err_N))]
 
-res = stat.linregress(np.log(err_N), np.log(err_errs))
-order = -res.slope
+res = stat.linregress(np.log(err_h), np.log(err_errs))
+order = res.slope
 print(f"Order: {order}")
 # LinregressResult(slope=-1.0091264964866835, intercept=-0.2527060789232243, rvalue=-0.9994067245685468, pvalue=1.64610185963301e-08, stderr=0.015552388491767849, intercept_stderr=0.08517539132364403)
 # Observed order: -1.01
-plt.plot(err_N, err_errs, label=f"Finite Difference solutions O(h^{order:.3f})")
-plt.xlabel("Number of slots N")
+plt.plot(err_h, err_errs, label=f"Finite Difference solutions O(h^{order:.3f})")
+plt.xlabel("Cell width h (cm)")
 plt.ylabel(f"Normalized error")
 plt.loglog()
 plt.grid(which="both")

@@ -256,7 +256,8 @@ For a system in steady state, we can also ignore the time dependence in \ref{eq:
 
 \newcommand{\ddx}{\frac{\partial}{\partial x}}
 \newcommand{\ddxx}{\frac{\partial^2}{\partial x^2}}
-Thus, consider the 1D system in \figref{prob2_setup}.
+Thus, we return to the 1D system in \figref{prob2_setup}.
+\subsection{Analytical Solution}
 To analytically solve for this distribution, one may first split the problem into two equations, one for each materially uniform region.
 For region~1, with uniform properties, with a uniform distributed source S:
 \begin{align}
@@ -268,7 +269,7 @@ For region~1, with uniform properties, with a uniform distributed source S:
 and got region 2, without such a source:
 \begin{equation}
     \label{eq:reg2}
-    \ddxx\phi_2 - \frac{1}{L_2^2}\phi_2 &= 0
+    \ddxx\phi_2 - \frac{1}{L_2^2}\phi_2 = 0
 \end{equation}
 First, consider the region~1 flux $\phi_1$.
 Eq.~\ref{eq:reg1-source} is not homogeneous (having the term $\frac{S}{D_1}$ independent of flux $\phi_1$), but can be split into a homogenous component solution $\phi_h$ and a particular solution $\phi_p$
@@ -289,9 +290,65 @@ In this case, since the inhomogeneous term is a constant, we could first try sim
     \ddxx A - \frac{1}{L_1^2}A &= -\frac{S}{D_1}\nonumber\\
     \frac{\Sigma_{a1}}{D_1}A &= \frac{S}{D_1}\nonumber\\
     A &= \frac{S}{\Sigma_{a1}}\\
+    \label{eq:part-sol}
     \rightarrow\phi_p &= \frac{S}{\Sigma_{a1}}
 \end{align}
-
+Then, for the homogeneous expression in Eq.~\ref{eq:homo}, applying a Helmholtz equation substitution:
+\begin{gather}
+    \ddxx \phi_h - \frac{1}{L_1^2}\phi_h = 0 \nonumber\\
+    \label{eq:homo-sol}
+    \rightarrow\phi_h = C_1\sinh(\frac{x}{L_1}) + C_2\cosh(\frac{x}{L_1}) \\
+\end{gather}
+We can then combine the homogeneous (\ref{eq:homo-sol}) and particular (\ref{eq:part-sol}) solutions to find $\phi_1$:
+\begin{align}
+    \color{gray}\phi_1&\color{gray}=\phi_h+\phi_p
+    \label{eq:reg1-source-sol}
+    \phi_1 &= C_1\sinh(\frac{x}{L_1}) + C_2\cosh(\frac{x}{L_1}) + \frac{S}{\Sigma_{a1}} \\
+    \label{eq:reg1-source-diff}
+    \ddx \phi_1 &= \frac{1}{L_1}\left(C_1\cosh(\frac{x}{L_1}) + C_2\sinh(\frac{x}{L_1})\right)
+\end{align}
+Then, for region 2 (Eq.~\ref{eq:reg2}), which has no source and is thus homogeneous, a Helmholtz equation solution is much more quickly found:
+\begin{gather}
+    \ddxx\phi_2 - \frac{1}{L_2^2}\phi_2 = 0\nonumber\\
+    \label{eq:reg2-sol}
+    \phi_2 = C_3\sinh(\frac{x}{L_2}) + C_4\cosh(\frac{x}{L_2})\\
+    \label{eq:reg2-diff}
+    \ddx \phi_2 = \frac{1}{L_2}\left(C_3\cosh(\frac{x}{L_2}) + C_4\sinh(\frac{x}{L_2})\right)
+\end{gather}
+To solve for the four coefficients $C_1$ through $C_4$, we employ four boundary conditions: symmetry around no source at $x=0$, conservation of flux and current at $x=a$, and an extrapolated vacuum boundary at $x=a+b$ (ignoring the extrapolation distance $2D_2$).
+Applying the boundary conditions at $x=0$ and $x=a+b$:
+\begin{align}
+    \label{eq:sym-bound}
+    0 &= \ddx \phi_1(x=0) \\
+      &= \frac{1}{L_1}\left(C_1\cosh(\frac{0}{L_1}) + C_2\sinh(\frac{0}{L_1})\right)\nonumber\\
+      &= \frac{C_1}{L_1} = C_1\nonumber\\
+    \label{eq:vac-bound}
+    0 &= \phi_2(x=a+b)\\
+      &= C_3\sinh(\frac{a+b}{L_2}) + C_4\cosh(\frac{a+b}{L_2})\nonumber\\
+    \rightarrow\phi_2&=C_5\sinh(\frac{x-(a+b)}{L_2})
+\end{align}
+The remaining boundary conditions at $x=a$ yield a system of two equations for $C_2$ and $C_5$:
+\begin{align}
+    \label{eq:prob2-abounds}
+    0 &= \phi_1(x=a) - \phi_2(x=a)\\
+      &= C_2\cosh(\frac{a}{L_1}) + \frac{S}{\Sigma_{a1}} - C_3\sinh(\frac{a}{L_2}) - C_4\cosh(\frac{a}{L_2})\nonumber\\
+    0 &= -D_1\ddx\phi_1(x=a) + D_2\ddx\phi_2(x=a) \\
+      &= -\frac{D_1}{L_1}\left(C_2\sinh(\frac{a}{L_1})\right) + \frac{D_2}{L_2}\left(C_5\cosh(\frac{-b}{L_2})\right)\nonumber\\
+\end{align}
+Solving this system of equations yields:
+\begin{align}
+    \label{eq:prob2-coeffs}
+    C_2 &= -\frac{D_2 L_1 S \cosh(\frac{b}{L_2})}{\left(\Sigma_{a1} \left(D_1 L_2 \sinh(\frac{a}{L_1}) \sinh(\frac{b}{L_2}) + D_2 L_1 \cosh(\frac{a}{L_1}) \cosh(\frac{b}{L_2})\right)\right)} \\
+    C_5 &= -\frac{D_1 L_2 S \sinh(\frac{a}{L_1})}{\left(\Sigma_{a1} \left(D_1 L_2 \sinh(\frac{a}{L_1}) \sinh(\frac{b}{L_2}) + D_2 L_1 \cosh(\frac{a}{L_1}) \cosh(\frac{b}{L_2})\right)\right)}\nonumber
+\end{align}
+which correspond to flux solutions:
+\begin{align}
+    \label{eq:reduced-sols}
+    \phi_1&=C_2\cosh(\frac{x}{L_1}) + \frac{S}{\Sigma_{a1}} \\
+    \phi_2&=C_5\sinh(\frac{x-(a+b)}{L_2})\nonumber
+\end{align}
+This solution, for NUMBERS can be seen in \figref{P2_flux}, compared to varying numerical solutions found in the next section.
+\subsection{Finite Difference Solution}
 Consider again the diffusion equation as found in Eq.~\ref{eq:diffusion}:
 \begin{equation*}
     \frac{1}{v}\frac{\partial \phi\rt}{\partial t}-\nabla\cdot D\nabla\phi\rt + \Sigma_a\rt\phi\rt = \nu_p\Sigma_f\rt\phi\rt + \sum_{i=1}^{N}\lambda_iC_i\rt + s\rt
@@ -300,17 +357,104 @@ Consider again the diffusion equation as found in Eq.~\ref{eq:diffusion}:
 To solve using a finite difference method, we replace each derivative with a finite difference approximation.
 In an analytical solution where one would consider separate equations for each uniform region, then for each equation $D$ does not change with respect to position and $-\nabla D\nabla\phi\rt$ can be simplified to $-D\nabla^2\phi\rt$ (in the above 1D case, $-D\frac{\partial^2\phi\rt}{\partial x^2}$).
 To use a finite difference method, with \emph{one} equation accounting for spatial variation in $D$ across the material, then this assumption must be withheld to find a \emph{conservative} finite difference approximation of $-\nabla D\nabla\phi\rt$:
-\begin{align}
-    -\nabla D\nabla\phi &= \nabla J\\
-%% TODO: Actually finish this derivation hell hell hell hel surffering
-\end{align}
+% \newcommand{\lfrac}{\frac{D_{i-1}}{D_i+D_{i-1}}}
+% \newcommand{\rfrac}{\frac{D_{i+1}}{D_i+D_{i+1}}}
+% \begin{equation}
+%     -\nabla D_i\nabla\phi_i \approx -\frac{2D_i}{h^2}\left(\right)
+% \end{equation}
 \newcommand{\pfrac}{\left(\frac{D_{i+1}}{D_i+D_{i+1}}\right)}
 \newcommand{\mfrac}{\left(\frac{D_{i-1}}{D_i+D_{i-1}}\right)}
 \begin{equation}
+    \label{eq:conserv-stream}
     \left[-\ddx D\ddx\phi\right]_i = -\frac{D_i}{h^2/2}\left(\pfrac\left(\phi_{i+1}-\phi_i\right)+\mfrac\left(\phi_{i-1}-\phi_i\right)\right) 
 \end{equation}
-plugging this into 
+This approximation of $-\ddx D\ddx\phi$ can then be plugged into the non-multiplying diffusion equation to yield an equation true for a given node $i$:
+\begin{equation}
+    \label{eq:center-findiff-short}
+    \left[-\ddx D\ddx\phi\right]_i + \Sigma_{a,i}\phi_i = S_i
+\end{equation}
 
+\newcommand{\dL}[1]{d_{L,#1}}
+\newcommand{\dR}[1]{d_{R,#1}}
+\newcommand{\dLR}[1]{d_{LR,#1}}
+or, by expanding each term and substituting shorthand $\dL{i}=\frac{D_i}{h^2/2}\mfrac$ and $\dR{i}=\frac{D_i}{h^2/2}\pfrac$ for the repeated fractions in Eq.~\ref{eq:conserv-stream}:
+\begin{equation}
+    \label{eq:shorthand}
+    \begin{split}
+        \dL{i}&=\frac{D_i}{h^2/2}\mfrac\\
+        \dR{i}&=\frac{D_i}{h^2/2}\pfrac
+    \end{split}
+\end{equation}
+\begin{equation}
+    \label{eq:center-findiff}
+    -d_L\phi_{i-1} + \left(d_L+d_R+\Sigma_{a,i}\right)\phi_i - d_R\phi_{i+1} = S
+\end{equation}
+This equation applies to every of the $N+1$ nodes except for the leftmost $i=0$ and rightmost $i=N$, which lack such relative nodes $i-1$ and $i+1$, respectively.
+Instead, at these points, we may apply the boundary conditions of $x=0$ and $x=a+b$.
+At $x=0$, we apply the same symmetric boundary condition seen in Eq.~\ref{eq:sym-bound}, using a similar approach as in Eq.~\ref{eq:find_coeff} to make a right-handed approximation of $\ddx\phi$:
+\begin{equation}
+    \label{eq:sym-findiff}
+    \ddx\phi_0 \approx \frac{3\phi_0-4\phi_1+\phi_2}{2h}=0
+\end{equation}
+Then, neglecting the extrapolated distance as in Eq.~\ref{eq:vac-bound}, no approximation of the derivative is necessary, and we simply set the final node's flux to zero:
+\begin{equation}
+    \label{eq:vac-findiff}
+    \phi_N = 0
+\end{equation}
+We have now obtained a system of linear equations, where some linear combination of values of $phi$ can be set to a known value.
+These can be assembled into a matrix equation (where, for conciseness, $\dLR{i}=\dL{i}+\dR{i}$, and empty spaces are assumed to be 0):
+
+\begin{align}
+    \label{eq:prob2-matrix}
+    \begin{bmatrix}
+        -3 & 4 & -1 & & & \\
+        -\dL{1} & \dLR{1}+\Sigma_{a,2} & -\dR{1} &&\\
+        & -\dL{2} & \dLR{2}+\Sigma_{a,2} & -\dR{2} &\\
+        &&\ddots& \ddots & \ddots\\
+        &&-\dL{N-1} & \dLR{N-1}+\Sigma_{a,N-1} & -\dR{N-1}\\
+        &&&&1
+    \end{bmatrix}&
+    \begin{bmatrix}
+        \phi_0\\\phi_1\\\phi_2\\\vdots\\\phi_{N-1}\\\phi_N
+    \end{bmatrix}
+    &=&
+    \begin{bmatrix}
+        0\\S_1\\S_2\\\vdots\\S_{N-1}\\0
+    \end{bmatrix} \\
+    A\qquad&\qquad \phi&=&\qquad b\nonumber
+\end{align}
+This equation can then be used to solve for the flux distribution $\phi$ to be calculated simply by calculating matrices $A$ and $b$ and finding $\phi=A^{-1}b$.\\
+
+Using Eq.~\ref{eq:prob2-matrix}, numerical solutions were obtained for simulations with cell counts $N\in\left\{5, 10, 20, 40\right\}$.
+The flux distributions obtained for each simulation are displayed in \figref{P2_flux} and compared to the analytical solution for the same distribution.
+
+\defplot{P2_flux}{The flux of the (1D, Cartesian, non-multiplying) as found by analytical and numerical solutions with varying numbers of cells $N$.}
+\FloatBarrier
+
+These solutions, as expected, seem to trend closer and closer to the analytical solution as $N$ increases.
+With solutions using enough values of $N$, the change of error with respect to $h$ (in this case, equivalent to $\frac{a+b}{N}$) can be estimated.
+If we expect the solution to have order $\bigO(h^n)$, then we can solve for $n$:
+\begin{equation}
+\label{eq:err-order}
+\begin{split}
+    \mathrm{error} &= Kh^n\\
+    \log(\mathrm{error}) &= \log(K)+n\log(h)
+\end{split}
+\end{equation}
+Taking a linear regression of $\log(\mathrm{error})$ and $\log(h)$ found using solutions with $N\in\left\{25, 50, 100, 200, 400, 800, 1600\right\}$ cells, an order of convergence was found of $\bigO(h^{1.00912})$, slightly better than first order.
+The errors found for different values of $h$ may be seen on a log-log plot in \figref{P2_error}.\\
+
+To estimate error, a relative L$^2$ norm was computed for each flux solution $\phi$ and the exact analytical solution $\phi^*$:
+\begin{equation}
+    \label{eq:err-def}
+    \mathrm{error} = \frac{\left|\left|\phi-\phi^*\right|\right|_2}{\left|\left|\phi^*\right|\right|_2}
+\end{equation}
+where the L$^2$ norm is defined for a vector $x$ of length $N+1$ in Eq.~\ref{eq:l2-def} below:
+\begin{equation}
+    \label{eq:l2-def}
+    ||x||_2 = \sqrt{\sum_{i=1}^{N+1}x_i^2}
+\end{equation}
+\defplot{P2_error}{The error found in numerical simulations of cell counts $N\in\left\{25, 50, 100, 200, 400, 800, 1600\right\}$, compared to their cell sizes $h$. As expected, error increases with larger sizes $h$, doing so slightly faster than a first order error $\bigO(h^1)$.}
 \FloatBarrier
 \section{Problem 3: Multiplying Systems}
 
@@ -319,16 +463,258 @@ Consider again the neutron diffusion equation seen in Eq.~\ref{eq:diffusion}, th
     \label{eq:multiplying-diff}
     \frac{1}{v}\frac{\partial \phi}{\partial t} -\nabla\cdot D\nabla\phi\rt + \Sigma_a\rt\phi\rt = \nu\Sigma_f\rt\phi\rt
 \end{equation}
-\subsection{}
+In such multiplying systems, the time rate of change of $\phi$ is proportional to some spatial distribution of $\phi$ and nothing else, forming eigenvector combinations of flux distributions which exponentially increase or decay in time.
+While a full and proper analysis might try to take into account every possible multiplying distribution $\phi$, each fundamental distribution, or ``mode'', corresponds to a different multiplication rate $k$, and thus for a system left to operate over long enough time, one can describe flux simply using the most dominant mode, that is, the one with largest multiplication rate $k$.\\
+
+Suppose that for some flux distribution $\phi$, the distribution time change $\frac{1}{v}\frac{\partial \phi}{\partial t}$ is proportional to the current distribution of flux, such that on average every neutron released goes on to cause $k$ subsequent neutron releases through fission, a multiplication rate $k$.
+Then, while the distribution itself would not be in steady state, that distribution, in a hypothetical material with $\nu=\frac{\nu}{k}$ would be in steady state, allowing us to write:
+\begin{equation}
+    \label{eq:pseudo-steady}
+    -\nabla\cdot D\nabla\phi\rt + \Sigma_a\rt\phi\rt = \frac{1}{k}\nu\Sigma_f\rt\phi\rt
+\end{equation}
+and form some sort of Helmholtz equation to describe $\phi$.
+Typically, this revolves around a Helmholtz coefficient termed ``material buckling'':
+\begin{equation}
+    \label{eq:mat-buckling}
+    B=\frac{\nu\Sigma_f - \Sigma_a}{D}
+\end{equation}
+This ``material'' buckling can then be compared to the ``geometric'' buckling found through the geometry of the problem to determine what materials or what geometry would be required to produce a critical system (if such a feat is posible).
+
+For a non-critical system of determined geometry and material, if the unknown multiplication rate $k$ is folded into this definition, one can define a hypothetically critical material buckling $B_c$:
+\begin{equation}
+    \label{eq:crit-buckling}
+    B_c=\frac{\frac{1}{k}\nu\Sigma_f - \Sigma_a}{D}
+\end{equation}
+
+and form a Helmholtz equation for multiplying flux within a 1D medium of uniform properties:
+\begin{equation}
+    \label{eq:noncrit-mult}
+    \begin{gathered}
+        -D\nabla^2\phi + \Sigma_a\phi\rt = \frac{1}{k}\nu\Sigma_f\phi\rt
+        \\
+        -D\ddxx \phi(x) - \left(\frac{1}{k}\nu\Sigma_f-\Sigma_a\right)\phi(x) = 0 \\
+        \ddxx\phi + \frac{\frac{1}{k}\nu\Sigma_f - \Sigma_a}{D}\phi = 0\\
+        \ddxx\phi + B_c^2\phi = 0\\
+        \phi = C_1\sin(B_cx) + C_2\cos(B_cx)
+    \end{gathered}
+\end{equation}
+Using boundary conditions, an imposed scale (such as normalizing reactor power to 1), and assuming a non-trivial solution, one would then solve for a value of $B_c$ by solving for $B_c$ which allow the spatial distribution to line up with such conditions.
+Because $B_c$ corresponds to an individual $k$ value (Eq.~\ref{eq:crit-buckling}), this condition typically reveals an infinite series of $B_c$.
+However, since for systems after enough time we only need to consider the dominant mode of flux, we can consider only the smallest value of $B_c$, which results in the largest multiplication rate $k$:
+\begin{equation}
+    \label{eq:k-buck}
+    k=\frac{\nu \Sigma_{f1}}{\left(\left(B_c^{2} D\right)+\Sigma_{a1}\right)}
+\end{equation}
+Then, one can describe the long-term flux distribution, using the actual material buckling $B$, and its multiplication rate $k$.
+
+\subsection{Analytical Solution}
+Consider, for example, the system of \figref{prob2_setup}, but this time with a region 1 which has a fission cross-section $\Sigma_f$, rather than a distributed source.
+In this problem, consider region~1 to have properties $\Sigma_{a1}=0.066$~[1/cm], $\Sigma_{f1}=0.02787$~[1/cm], $D_1=0.79$~[cm], $\nu=2.4$~[neutrons/fission], and region~2 the properties $\Sigma_{a2}=0.000709$~[1/cm] and $D_2=1.0$~[cm]. \\
+
+Region 1 may be described with the multiplying diffusion equation of Eq.~\ref{eq:noncrit-mult}:
+\begin{equation}
+    \begin{gathered}
+        -D\nabla^2\phi_1 + \Sigma_a\phi_1\rt = \frac{1}{k}\nu\Sigma_f\phi_1\rt
+        \\
+        -D\ddxx \phi_1(x) - \left(\frac{1}{k}\nu\Sigma_f-\Sigma_a\right)\phi_1(x) = 0 \\
+        \ddxx\phi_1 + \frac{\frac{1}{k}\nu\Sigma_f - \Sigma_a}{D}\phi_1 = 0\\
+        \ddxx\phi_1 + B_c^2\phi_1 = 0\\
+        \phi_1 = C_1\sin(B_cx) + C_2\cos(B_cx)\\
+        \ddx\phi_1 = B_cC_1\cos(B_cx) + B_cC_2\sin(B_cx)
+    \end{gathered}
+\end{equation}
+Using the symmetry boundary condition:
+\begin{equation}
+    \begin{aligned}
+        \ddx\phi_1(0) = 0 &= B_cC_1\cos(0) + B_cC_2\sin(0)\\
+        0&= B_cC_1\\
+    \end{aligned}
+\end{equation}
+\begin{equation}
+    \label{eq:reg1-mult-reduced}
+    \begin{gathered}
+        \color{gray}\rightarrow C_1=0\\
+        \phi_1 = C_2\cos(B_cx)\\
+        \ddx\phi_1 = -B_cC_2\sin(B_cx)
+    \end{gathered}
+\end{equation}
+Region 2, which has neither distributed source nor multiplying material, can be described using an identical process as in Problem~2, Eqs.~\ref{eq:reg2-sol} to \ref{eq:reduced-sols}:
+\begin{equation}
+    \label{eq:reg2-reduced}
+    \begin{aligned}
+        \phi_2&=C_5\sinh(\frac{x-(a+b)}{L_2})\\
+        \ddx\phi_2&= \frac{C_5}{L_2}\cosh(\frac{x-(a+b)}{L_2})
+    \end{aligned}
+\end{equation}
+
+Combining the flux distributions in Eqs.~\ref{eq:reg1-mult-reduced} and \ref{eq:reg2-reduced} with the same boundary conditions at $x=a$ as fr the non-multiplying system (Eq.~\ref{eq:prob2-abounds}):
+\begin{equation}
+    \label{eq:prob3-abounds}
+    \begin{aligned}
+        0 &= \phi_1(x=a) - \phi_2(x=a)\\
+        &= C_2\cos(B_ca) - C_5\sinh(\frac{-b}{L_2})\\
+        0 &= -D_1\ddx\phi_1(x=a) + D_2\ddx\phi_2(x=a) \\
+        &= D_1B_cC_2\sin(B_ca) + \frac{D_2C_5}{L_2}\cosh(\frac{-b}{L_2})\\
+    \end{aligned}
+\end{equation}
+Since there is no constant term such as $S$ in this expression, trying to solve for this problem for $C_2$ and $C_5$ would only yield the trivial solution $C_2=C_5=0$, we instead use one boundary condition to solve for $C_5$ in terms of $C_2$:
+\begin{equation}
+    \label{eq:c5-c2}
+    C_5 = C_2\frac{\cos(B_ca)}{\sinh(\frac{-b}{L_2})}
+\end{equation}
+and use the other as a condition on what $B_c$ must be for the system to be critical:
+\begin{equation}
+    \label{eq:crit-condition}
+    \begin{aligned}
+        D_1B_cC_2\sin(B_ca) &= -\frac{D_2C_5}{L_2}\cosh(\frac{-b}{L_2})\\
+        D_1B_cC_2\sin(B_ca) &= -\frac{D_2C_2\frac{\cos(B_ca)}{\sinh(\frac{-b}{L_2})}}{L_2}\cosh(\frac{-b}{L_2})\\
+        B_c\tan(B_ca) &= \frac{D_2}{D_1L_2\tanh(\frac{b}{L_2})}
+    \end{aligned}
+\end{equation}
+
+Using a graphical tool like \hyperlink{https://www.desmos.com/calculator/uuepsi5ikz}{Desmos}, the values of $B_c$ for which this distribution is valid may be visualized, and the smallest $B_c$ found, as shown in \figref{P3_desmos}.
+
+\defplot{P3_desmos}{For an example problem ($a=10$~cm, $b=50$~cm), the smallest value of $B_c$ which satisfies the criticality condition $B_c\tan(B_ca)= \frac{D_2}{D_1L_2\tanh(\frac{b}{L_2})}$}
+
+Finally, to solve for $C_2$, some condition may be used to force a specific scale, such as by requiring the neutron production of the reactor to equal 1 (taking care to distinguish between the actual material buckling $B$ and the hypothetically critical buckling $B_c$):
+\begin{equation}
+    \label{eq:production-force}
+    \begin{aligned}
+        1=P&=\int_{0}^{a+b}\phi(x)\nu\Sigma_f(x)dx\\
+        &=\int_{0}^{a}\phi_1(x)\nu\Sigma_{f,1}dx\\
+        &=\int_{0}^{b}C_2\cos(Bx)\nu\Sigma_{f,1}dx\\
+        &=\frac{C_2}{B}\sin(Bx)\nu\Sigma_{f,1}\\
+        C_2&=\frac{B}{\sin(Bx)\nu\Sigma_{f,1}}
+    \end{aligned}
+\end{equation}
+which may then be used alongside Eq.~\ref{eq:c5-c2} for the two final flux distributions:
+\begin{equation}
+    \label{eq:p3-dists}
+    \begin{gathered}
+        C_2=\frac{B}{\sin(Bx)\nu\Sigma_{f,1}}\\
+        C_5=C_2\frac{\cos(B_ca)}{\sinh(\frac{-b}{L_2})}\\
+        \phi_1= C_2\cos(B_cx)\\
+        \phi_2=C_5\sinh(\frac{x-(a+b)}{L_2})
+    \end{gathered}
+\end{equation}
+
+Returning to the criticality condition of Eq.~\ref{eq:crit-condition}, we may glean useful information about the reactor.\\
+
+For instance, if we wanted a geometry which was perfectly critical, then we could impose that $B_c=B$, since $k=1$
+
+\begin{table}
+    \label{tab:bvals}
+    \caption{The reflector thicknesses $b$ required to make a system with a multiplying region $a$ thick critical. Systems which with any thickness $b$ would be subcritical are denoted $k<1$, and ones which would be supercritical for any $b$ are denoted $k>1$.}
+    \begin{tabular}{c|cccccccccc}
+a (cm) & 5 & 10 & 15 & 20 & 25 & 30 & 35 & 40 & 45 & 50\\\hline
+b (cm) & $k<1$ & $k<1$ & $k<1$ & $k<1$ & 56.187 & 28.302 & 16.901 & 8.997 & 2.350 & $k>1$
+    \end{tabular}
+\end{table}
+\FloatBarrier
+\subsection{Finite Difference Solution}
+Similarly to as in the prior problem, the diffusion equation of Eq.~\ref{eq:pseudo-steady} may be formulated as a finite difference equation:
+\begin{equation}
+    \label{eq:mult-findiff}
+    \left[-\ddx D\ddx\phi\right]_i + \Sigma_{a,i}\phi_i = \frac{1}{k}\nu\Sigma_{f,i}\phi_i
+\end{equation}
+with $\left[-\ddx D\ddx\phi\right]_i$ and shorthand terms $\dL{i}$ and $\dR{i}$ defined as in Eq.~\ref{eq:shorthand}:
+\begin{equation}
+    \label{eq:mult-findiff}
+    -d_L\phi_{i-1} + \left(d_L+d_R+\Sigma_{a,i}\right)\phi_i - d_R\phi_{i+1} = \frac{1}{k}\nu\Sigma_{f,i}\phi_i
+\end{equation}
+For the boundary nodes $\phi_0$ and $\phi_N$, the same boundary conditions as in Eqs.~\ref{eq:sym-findiff} and \ref{eq:vac-findiff} may be applied.
+Together, these yield a matrix equation similar to \ref{eq:prob2-matrix}
+
+\begin{equation}
+    \label{eq:prob3-matrix}
+    \begin{aligned}
+    \begin{bmatrix}
+        -3 & 4 & -1 &  \\
+        -\dL{1} & \dLR{1}+\Sigma_{a,2} & -\dR{1} &&\\
+        &\ddots& \ddots & \ddots\\
+        &-\dL{N-1} & \dLR{N-1}+\Sigma_{a,N-1} & -\dR{N-1}\\
+        &&&1
+    \end{bmatrix}&
+    \begin{bmatrix}
+        \phi_0\\\phi_1\\\vdots\\\phi_{N-1}\\\phi_N
+    \end{bmatrix}
+    &=&
+    \frac{1}{k}
+    \begin{bmatrix}
+        0\\\nu_1\Sigma_{f,1}\\\vdots\\\nu_{N-1}\Sigma_{f,N-1}\\0
+    \end{bmatrix} \\
+    M\qquad&\qquad \phi&=&\qquad \frac{1}{k}F\phi
+    \end{aligned}
+\end{equation}
+where $\frac{1}{k}F\phi$ expands to:
+\begin{equation}
+    \begin{split}
+    \frac{1}{k}
+    \begin{bmatrix}
+        0 & &  & & & \\
+        & \nu_1\Sigma_{f,1} & &&\\
+        && \ddots &\\
+        &&& \nu_{N-1}\Sigma_{f,N-1} &\\
+        &&&&1
+    \end{bmatrix}&
+    \begin{bmatrix}
+        \phi_0\\\phi_1\\\vdots\\\phi_{N-1}\\\phi_N
+    \end{bmatrix}\\
+    F\qquad&\qquad \phi
+    \end{split}
+\end{equation}
+This equation is true for any (eigenvector) distribution of flux $\phi$ which is scaled every generation by an (eigenvalue) multiplication rate $k$, and the dominant (largest) value of $k$ and corresponding distribution $\phi$ may be solved for by manipulating the relationship to return a new $\phi_{n+1}$ using a previous guess of $k_n$ and $\phi_n$ (where $n$ represents the index of power iteration):
+\begin{equation}
+    \label{eq:pow-iter}
+    \begin{gathered}
+        M\phi = \frac{1}{k}F\phi \\
+        \phi = M^{-1}\left(\frac{1}{k}F\phi\right)\\
+        \phi_{n+1} = M^{-1}\left(\frac{1}{k_n}F\phi_n\right)\\
+        k_{n+1} = \frac{\int_{0}^{a+b}\nu\Sigma_{f}\phi dx}{\int_{0}^{a+b}\Sigma_{a}\phi dx}
+    \end{gathered}
+\end{equation}
+where the integral evaluations for $k_{n+1}$ are carried out using a numerical integral process such as a trapezoidal Reimann sum.
+To maintain consistent scales of $\phi$, after every iteration the distribution is then normalized using a similar integral evaluation of power, to normalize power to 1:
+\begin{gather}
+    P=\int_{0}^{a+b}\Sigma_{f}\phi dx\\
+    \phi = \frac{\phi}{P}
+\end{gather}
+\\
+
+Starting from a reasonable initial guess of $k$ and $\phi$, this process may then be repeated until sufficient convergence criteria are met:
+\begin{equation}
+    \label{eq:convergence}
+    \begin{gathered}
+        \frac{||\phi_{n+1}-\phi_{n}||_2}{||\phi_n||_2} \leq 10^{-6}\\
+        \frac{(k_{n+1}-k_n)^2}{(k_n)^2}\leq 10^{-6}
+    \end{gathered}
+\end{equation}
+Using this method for discretizations of $N\in\left\{10, 20, 40, 80, 160\right\}$ cells, distributions of $\phi$ and their corresponding $k$ values were solved for, and may be seen in \figref{P3_a10} for geometry with $a=10$, in \figref{P3_a25} for $a=25$, and \figref{P3_a50} for $a=50$, with $k$ values additionally compared in Table~\ref{tab:kvals}. 
 
 % Critical a when no multiplier: 46.85187 cm (\cos\left(Ba\right) = 0)
-% Critical a as b approaches inf: 20.01961 cm (B\tan\left(Ba\right) = \frac{1}{L_{2}} )
+% Critical a as b approaches inf: 23.50502 cm (BD_{1} = \frac{D_{2}}{L_{2}\tan(Ba)})
 
 % K results 
 % a (cm) & b (cm) & Numerical Solutions &&&&& Analytical
 % 10 & 50 & 0.96688 & 0.97559 & 0.97257 & 0.97407 & 0.97331 & 0.97356\\
 % 25 & 50 & 1.00042 & 0.99925 & 0.99981 & 0.99951 & 0.99966 & 0.9960\\
 % 50 & 50 & 1.00858 & 1.00828 & 1.00812 & 1.00804 & 1.00800 & 1.00796\\
+\defplot{P3_a10}{The normalized flux distributions of geometry with $a=10$ for numerical solutions with $N\in\left\{10, 20, 40, 80, 160\right\}$ cells, compared to an analytical solution.}
+\defplot{P3_a25}{The normalized flux distributions of geometry with $a=25$ for numerical solutions with $N\in\left\{10, 20, 40, 80, 160\right\}$ cells, compared to an analytical solution.}
+\defplot{P3_a50}{The normalized flux distributions of geometry with $a=50$ for numerical solutions with $N\in\left\{10, 20, 40, 80, 160\right\}$ cells, compared to an analytical solution.}
+
+\begin{table}
+    \label{tab:kvals}
+    \caption{The k values found using finite difference numerical simulations with different numbers $N$ of cells, compared to those found analytically, for geometries of different lengths $a$ and $b$.}
+    \begin{tabular}{cc|cccccc}
+&Geometry& k \\
+a (cm)&b (cm)& N = 10  & N = 20  & N = 40  & N = 80  & N = 160 & Analytic\\\hline
+10 & 50 & 0.96688 & 0.97559 & 0.97257 & 0.97407 & 0.97331 & 0.97356 \\
+25 & 50 & 1.00042 & 0.99925 & 0.99981 & 0.99951 & 0.99966 & 0.99961 \\
+50 & 50 & 1.00858 & 1.00828 & 1.00812 & 1.00804 & 1.00800 & 1.00796 \\
+    \end{tabular}
+\end{table}
+\FloatBarrier
 \section{Conclusions}\label{sec:conc}
 
 
