@@ -69,8 +69,9 @@ def Rf(phi: np.ndarray, Xf:np.ndarray, h):
     Uses trapezoidal integration across x of phi and cross section
     '''
     Rf = sum([0.5*(phi[i-1]*Xf[i-1]+phi[i]*Xf[i])*h for i in range(1,len(Xf))])
-    # print(f"Rf: {f}")
     return Rf
+def trapz(dist: np.ndarray, h):
+    return sum([0.5*(dist[i-1]+dist[i])*h for i in range(len(dist))])
     
 
 def powit_kPhi(M:np.ndarray, F:np.ndarray, h:float, Xf:np.ndarray|None=None, debug=False):
@@ -95,7 +96,8 @@ def powit_kPhi(M:np.ndarray, F:np.ndarray, h:float, Xf:np.ndarray|None=None, deb
         # print(f"nphi: {nphi.shape}")
         rrate = Rf(nphi, Xf, h) if not Xf is None else la.norm(nphi, 1)*h
         nphi /= rrate
-        nk = la.norm((F@nphi)[1:N], 1) / la.norm((M@nphi)[1:N], 1)
+        # nk = la.norm((F@nphi)[1:N], 1) / la.norm((M@nphi)[1:N], 1)
+        nk = trapz(F@nphi, h) / trapz(M@nphi, h)
 
 
         conv_k = (nk-lk)**2 / (lk**2)
@@ -112,7 +114,7 @@ def powit_kPhi(M:np.ndarray, F:np.ndarray, h:float, Xf:np.ndarray|None=None, deb
         
 
 ab_vals = [(10, 50), (25, 50), (50, 50)]
-k_vals = [0.97356, 0.999608346014, 1.00796]
+k_vals = [0.973561967144, 0.999608346014, 1.00795662188]
 
 NL = [10, 20, 40, 80, 160, 320, 640, 1280] 
 NL = [10*2**i for i in range(5)]
@@ -133,7 +135,7 @@ def xPhi_an(av, bv, k):
     B = ((nu*Xf1/k - Xa1)/D1)**0.5
 
     unscl_Rf = (Xf1*np.sin(B*av)/B)
-    C1 = 1  / unscl_Rf    
+    C1 = 1  / unscl_Rf
     C2 = C1* np.cos(B*av) / (np.sinh(-bv/L2))
 
     phi[:bound] = C1*np.cos(B*x1)
@@ -197,3 +199,6 @@ for i in range(len(ab_vals)):
     plt.grid(which="both")
     plt.legend()
     plt.show()
+
+# Solve for b required to reach criticality for different a
+a_vals = []
