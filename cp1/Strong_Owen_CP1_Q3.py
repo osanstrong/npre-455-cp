@@ -217,6 +217,51 @@ for i in range(len(ab_vals)):
     plt.ylabel("Normalized flux")
     plt.grid(which="both")
     plt.legend()
-    # plt.show()
+    plt.show()
+
+
+#### SymPy Code to illustrate solving for coefficients
+
+# import sympy as sp
+# from sympy import Symbol as Sym, sinh, cosh, sin, cos
+
+# import numpy as np
+# import matplotlib.pyplot as plt
+
+
+# D1 = Sym("D_1")
+# L1 = Sym("L_1")
+# Xf1 = Sym("X_{f1}")
+# X1 = Sym("X1")
+# S = Sym("S")
+# D2 = Sym("D_2")
+# L2 = Sym("L_2")
+
+# a = Sym("a")
+# b = Sym("b")
+
+# # Prob 3, B is buckling
+# N = Sym("N")
+# P = Sym("P")
+# B = Sym("B")
+
+# x = Sym("x")
+
+# phi1 = N*cos(B*x)
+# dphi1 = sp.derive_by_array(phi1, x)
+# iphi1 = (N/B)*sin(B*x)
+# phi2 = P*sinh((x-(a+b))/L2)
+# dphi2 = sp.derive_by_array(phi2, x)
+# iphi2 = L2*P*cosh((x-(a+b))/L2)
+
+# e1 = phi1.subs(x, a) - phi2.subs(x, a)
+# e2 = -D1*dphi1.subs(x, a) + D2*dphi2.subs(x, a)
+
+# cc_expr = e2
+# ncc_expr = e2 if cc_expr == e1 else e1
+
+# PN = sp.simplify(sp.solve(ncc_expr, P)[0])
+# print(f"P = {PN}")
+# print(f"Criticality condition: 0={cc_expr.subs(P, PN)}")
 
 

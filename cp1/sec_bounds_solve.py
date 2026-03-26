@@ -95,9 +95,9 @@ e2 = -D1*dphi1.subs(x, a) + D2*dphi2.subs(x, a)
 cc_expr = e2
 ncc_expr = e2 if cc_expr == e1 else e1
 
-PN = sp.simplify(sp.solve(cc_expr, P)[0])
+PN = sp.simplify(sp.solve(ncc_expr, P)[0])
 print(f"P = {PN}")
-print(ncc_expr.subs(P, PN))
+print(f"Criticality condition: 0={cc_expr.subs(P, PN)}")
 
 B_val = (nu*Xf1_val - Xa1)/D1_val
 flux_subs = lambda a_val, b_val: { # known that critical, solve for b given a

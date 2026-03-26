@@ -51,15 +51,27 @@
 \pagebreak
 \pagenumbering{arabic}
 \begin{abstract}
-
+    The Neutron Diffusion Equation is a key model for understanding the behavior of neutrons in a system like a nuclear reactor, and is often approximated using methods such as finite-difference approximation to model more complicated geometry than would be feasible using analytic solutions alone.
+    In this report, we aim to explore finite-difference methods and their application to the Neutron Diffusion Equation, namely to multiplying and non-multiplying planar systems.
+    We find finite difference approximations of a non-multiplying and a multiplying form of the Diffusion Equation, and apply them to models of the planar systems discretized in space over various sizes $h$ of cells.
+    We find a reasonable numerical solution convergence of order $\bigO(h^{1.009})$ in the non-multiplying system to the analytical solution and a consistent convergence for different combinations of geometry for the multiplying system to the flux distributions and multiplication values found using analytical solutions.
+    These results confirm the effectiveness and certain key limitations of finite-difference approximations of the Neutron Diffusion Equation, and may be of value to those aiming to perform neutronics analysis with limited time and resources.
 \end{abstract}
 
 \section{Introduction}
+Neutronics, or the behavior of neutrons in a machine such as a nuclear reactor, is a crucial field of study in nuclear engineering.
+Nuclear reactor design, operation, decommissioning, and safety every step of the way all depend on being able to predict and understand the movement and interaction of neutrons with matter inside and out of the reactor.\\
+
+While several approaches are available towards characterizing neutron behavior in materials, perhaps the most common starting point is the robust Neutron Transport Equation, and the simpler, derived-therefrom, Neutron Diffusion Equation. 
+These equations are either solved analytically (when feasible, typically only for the Diffusion Equation in limited geometry), or more conventionally, using numerical methods like finite-difference approximations, to handle more complicated geometry and other requirements.\\
+
+In this report, finite-difference approximations are explored briefly in general, and their application to solve two one-dimensional diffusion problems (one of a distributed source region, and one of a multiplying region) tested and compared to analytical solutions to find flux distributions, and for the multiplying system, multiplication rates $k$.
 \section{Problem 1: Finite Difference Overview}
 % Theory behind finite difference methods
 In engineering mathematics, a number of differential equations prove undesirable to solve using analytic techniques.
 A common practical technique to solve problems using these equations is instead to use a ``finite difference'' approximation scheme, in which derivatives are approximated using finite differential quotients.\\
 
+\subsection{Finite-Difference Theory}
 Consider, in the simplest case, the definition of a 1D derivative as the slope, or rise over run, of a function:
 \begin{equation}
     \label{eq:lim-h}
@@ -114,6 +126,8 @@ or combined as in Eq.~\ref{eq:central}:
 Note how in this last example, a pair of terms cancel out, resulting in an error on the order $\bigO(h^2)$ instead of $\bigO(h)$.\\
 
 In fact, given some number $n$ of accessible \emph{nodes} of $f(x)$, one can find \emph{weights} for a generally optimal linear combination of these points equivalent to $f'(x)$ which eliminates at least $n-1$ error terms.
+
+\subsection{Right-handed Finite-Difference}
 For example, consider using the points $f(x)$, $f(x+h)$, $f(x+2h)$, and $f(x+3h)$. %, denoting these $x$ values $x_i$ through $x_{i+3}$.
 If we rewrite these points as Taylor expansions around $x$:
 \begin{align}
@@ -185,7 +199,7 @@ As seen in Eq.~\ref{eq:final_werror}, the most substantial term we were unable t
 To put this another way, suppose that one wished to refine $h$ to achieve an error reduction of $10\times$.
 If an initial approximation with spacing $h_0$ yielded error on the order $\bigO(h_0^2)$, then one could choose $h_1=Ch_0$:
 \begin{align}
-    \bigO(h_0^2)/10&=\bigO(h_1^2)\nonumber\\
+    \bigO(h_0^2)/10&=\bigO(h_1^2)\\
     &=\bigO((Ch_0)^2)\nonumber\\
     \bigO(h_0^2)/10&=C^2\bigO(h_0^2)\nonumber\\
     C&=\sqrt{1/10}
@@ -224,7 +238,7 @@ The formulation of the diffusion equation in Eq.~\ref{eq:diffusion} also assumes
 This assumption also serves to simplify calculations, but is not as crucial as the diffusion assumption, and the equation could still be split back up into multiple energy groups for a more accurate representation.\\
 
 In a more precise derivation, the neutron diffusion equation can be found by taking two moments, an integral over angle (zeroth moment) and an integral of that function times angle, over angle (first moment), then introducing the assumption that flux is \emph{linearly anisotropic}. This is by far the greatest assumption which simplifies the neutron transport equation to the neutron diffusion equation: that is, while not necessarily perfectly uniform over angle, the flux can at least be described by a linear function of angle.
-This report focuses primarily on the application of the end diffusion equation, but a step-by-step explanation of this derivation may be found at [LINK FULL EXPLANATION]
+This report focuses primarily on the application of the end diffusion equation, but more thorough derivations are available.\cite{novak_lecture6_2026}
 For the purposes of this report, the following limitations are most crucial:
 \begin{itemize}
     \item The diffusion equation fails if there is no medium to scatter in, like a vacuum.
@@ -239,12 +253,33 @@ Over each region $i$, a flux $\phi_i$ is then expected (if reasonable) to follow
 For a steady state problem, in which the time derivative (\ref{eq:trans_dt}) can be neglected, there remains only the second-degree spatial derivative of $\phi$, requiring two known boundary conditions to analytically resolve that solution.
 Between regions $a$ and $b$ which meet at $S_{ab}$, we can apply conservation based boundary conditions:
 \begin{itemize}
-    \item Flux described by both regions' $\phi_i\rt$ should agree at their interface: $\phi_a\rt=\phi_b\rt,{\hat{r}\in S_{ab}}$
+    \item Flux described by both regions' $\phi_i\rt$ should agree at their interface: 
+    \begin{equation}
+        \phi_a\rt=\phi_b\rt,{\hat{r}\in S_{ab}}
+    \end{equation}
+    \item The current crossing the boundary $\vec{J}\cdot\hat{n}$ is conserved, accounting for any known neutron production localized entirely within the boundary: 
+    \begin{equation}
+        \lim_{\vec{r}\rightarrow\vec{r_s}}\left[\hat{n}\cdot\left(\hat{J_2}\rt-\hat{J_1}\rt\right)\right]
+    \end{equation}
 \end{itemize}
+At vacuum boundaries which don't face other neutron-diffusing materials, one could assume incoming current at the boundary is zero:
+\begin{equation}
+    J_-(\vec{r_s})=\frac{\phi\vec{r_s}}{4}+\frac{D}{2}\nabla\phi(\vec{r_s})\cdot\hat{n}=0
+\end{equation}
+Which is in practice often shifted to an extrapolated boundary condition \cite{novak_lecture9_2026}:
+\begin{equation}
+    \phi(\vec{r_s}+2D\hat{n})=0
+\end{equation}
+Finally, one more common boundary condition is symmetry around some point, line, or plane.
+The gradient of flux can be assigned corresponding to a localized source embedded in this feature of symmetry, or without such a local source, simply assumed to be zero:
+\begin{equation}
+    \nabla\phi(\vec{r_s})=0
+\end{equation}
+\\
 
-\FloatBarrier
+Using some combination of these boundary conditions (two per flux region), an analytic solution for flux over these regions may be obtained.\\
 
-\defplot{prob2_setup}{The (symmetric) geometry of Problem~2: A central source, then one slab of Material~A, then a slab of Material~B before vacuum.}
+
 
 
 For a non-multiplying system (with no fission), $\Sigma_t$ in \ref{eq:trans_coll} simplifies to simply absorption $\Sigma_a$, and the prompt and delayed fission sources \ref{trans_prompt} and \ref{eq:trans_delay} can be ignored.
@@ -256,9 +291,13 @@ For a system in steady state, we can also ignore the time dependence in \ref{eq:
 
 \newcommand{\ddx}{\frac{\partial}{\partial x}}
 \newcommand{\ddxx}{\frac{\partial^2}{\partial x^2}}
-Thus, we return to the 1D system in \figref{prob2_setup}.
+\FloatBarrier
+
+\defplot{prob2_setup}{The (symmetric) geometry of Problem~2: A central source, then one slab of Material~A, then a slab of Material~B before vacuum. Taken from Computer Project 1 Manual.\cite{novak_computer_2026}}
+Consider the 1D system in \figref{prob2_setup}, with infinite slabs of two materials mirrored around a central plane $x=0$. For this system, one may consider it to have dimensions $a=10$~[cm], $b=20$~[cm], region~1 to have material properties $D_1=1$~[cm], $L_1=10$~[cm], and region~1 material properties $D_2=1.7$~[cm], $L_2=5$~[cm].
+
 \subsection{Analytical Solution}
-To analytically solve for this distribution, one may first split the problem into two equations, one for each materially uniform region.
+To analytically solve for this distribution over $0\leq x\leq a+b$, one may first split the problem into two equations, one for each materially uniform region.
 For region~1, with uniform properties, with a uniform distributed source S:
 \begin{align}
     -\ddx D_1\ddx\phi_1 + \Sigma_{a1}\phi_1 &= S \nonumber\\
@@ -272,7 +311,7 @@ and got region 2, without such a source:
     \ddxx\phi_2 - \frac{1}{L_2^2}\phi_2 = 0
 \end{equation}
 First, consider the region~1 flux $\phi_1$.
-Eq.~\ref{eq:reg1-source} is not homogeneous (having the term $\frac{S}{D_1}$ independent of flux $\phi_1$), but can be split into a homogenous component solution $\phi_h$ and a particular solution $\phi_p$
+Eq.~\ref{eq:reg1-source} is not homogeneous (having the term $\frac{S}{D_1}$ independent of flux $\phi_1$), but can be split into a homogeneous component solution $\phi_h$ and a particular solution $\phi_p$
 \begin{equation}
     \label{eq:homo-part}
     \phi_1 = \phi_h + \phi_p
@@ -286,7 +325,7 @@ Eq.~\ref{eq:reg1-source} is not homogeneous (having the term $\frac{S}{D_1}$ ind
 To solve for the particular solution, we could consider a wide range of functions whose differentials could somehow combine to produce the inhomogeneous term $-\frac{S}{D_1}$.
 In this case, since the inhomogeneous term is a constant, we could first try simply a constant function $\phi_p(x)=A$:
 \begin{align}
-    \phi_p(x)&=A
+    \phi_p(x)&=A\\
     \ddxx A - \frac{1}{L_1^2}A &= -\frac{S}{D_1}\nonumber\\
     \frac{\Sigma_{a1}}{D_1}A &= \frac{S}{D_1}\nonumber\\
     A &= \frac{S}{\Sigma_{a1}}\\
@@ -301,7 +340,7 @@ Then, for the homogeneous expression in Eq.~\ref{eq:homo}, applying a Helmholtz 
 \end{gather}
 We can then combine the homogeneous (\ref{eq:homo-sol}) and particular (\ref{eq:part-sol}) solutions to find $\phi_1$:
 \begin{align}
-    \color{gray}\phi_1&\color{gray}=\phi_h+\phi_p
+    \color{gray}\phi_1&\color{gray}=\phi_h+\phi_p\\
     \label{eq:reg1-source-sol}
     \phi_1 &= C_1\sinh(\frac{x}{L_1}) + C_2\cosh(\frac{x}{L_1}) + \frac{S}{\Sigma_{a1}} \\
     \label{eq:reg1-source-diff}
@@ -347,7 +386,7 @@ which correspond to flux solutions:
     \phi_1&=C_2\cosh(\frac{x}{L_1}) + \frac{S}{\Sigma_{a1}} \\
     \phi_2&=C_5\sinh(\frac{x-(a+b)}{L_2})\nonumber
 \end{align}
-This solution, for NUMBERS can be seen in \figref{P2_flux}, compared to varying numerical solutions found in the next section.
+This solution, for the given material and geometric properties, can be seen in \figref{P2_flux}, compared to varying numerical solutions found in the next section.
 \subsection{Finite Difference Solution}
 Consider again the diffusion equation as found in Eq.~\ref{eq:diffusion}:
 \begin{equation*}
@@ -401,7 +440,7 @@ Then, neglecting the extrapolated distance as in Eq.~\ref{eq:vac-bound}, no appr
     \label{eq:vac-findiff}
     \phi_N = 0
 \end{equation}
-We have now obtained a system of linear equations, where some linear combination of values of $phi$ can be set to a known value.
+We have now obtained a system of linear equations, where some linear combination of values of $\phi$ can be set to a known value.
 These can be assembled into a matrix equation (where, for conciseness, $\dLR{i}=\dL{i}+\dR{i}$, and empty spaces are assumed to be 0):
 
 \begin{align}
@@ -441,10 +480,10 @@ If we expect the solution to have order $\bigO(h^n)$, then we can solve for $n$:
     \log(\mathrm{error}) &= \log(K)+n\log(h)
 \end{split}
 \end{equation}
-Taking a linear regression of $\log(\mathrm{error})$ and $\log(h)$ found using solutions with $N\in\left\{25, 50, 100, 200, 400, 800, 1600\right\}$ cells, an order of convergence was found of $\bigO(h^{1.00912})$, slightly better than first order.
+Taking a linear regression of $\log(\mathrm{error})$ and $\log(h)$ found using solutions with $N\in\{$25, 50, 100, 200, 400, 800, 1600$\}$ cells, an order of convergence was found of $\bigO(h^{1.00912})$, slightly better than first order.
 The errors found for different values of $h$ may be seen on a log-log plot in \figref{P2_error}.\\
 
-To estimate error, a relative L$^2$ norm was computed for each flux solution $\phi$ and the exact analytical solution $\phi^*$:
+To estimate error, a relative L$^2$ norm\cite{novak_computer_2026} was computed for each flux solution $\phi$ and the exact analytical solution $\phi^*$:
 \begin{equation}
     \label{eq:err-def}
     \mathrm{error} = \frac{\left|\left|\phi-\phi^*\right|\right|_2}{\left|\left|\phi^*\right|\right|_2}
@@ -466,7 +505,7 @@ Consider again the neutron diffusion equation seen in Eq.~\ref{eq:diffusion}, th
 In such multiplying systems, the time rate of change of $\phi$ is proportional to some spatial distribution of $\phi$ and nothing else, forming eigenvector combinations of flux distributions which exponentially increase or decay in time.
 While a full and proper analysis might try to take into account every possible multiplying distribution $\phi$, each fundamental distribution, or ``mode'', corresponds to a different multiplication rate $k$, and thus for a system left to operate over long enough time, one can describe flux simply using the most dominant mode, that is, the one with largest multiplication rate $k$.\\
 
-Suppose that for some flux distribution $\phi$, the distribution time change $\frac{1}{v}\frac{\partial \phi}{\partial t}$ is proportional to the current distribution of flux, such that on average every neutron released goes on to cause $k$ subsequent neutron releases through fission, a multiplication rate $k$.
+Thus suppose that for some flux distribution $\phi$, the distribution time change $\frac{1}{v}\frac{\partial \phi}{\partial t}$ is proportional to the current distribution of flux, such that on average every neutron released goes on to cause $k$ subsequent neutron releases through fission, a multiplication rate $k$.
 Then, while the distribution itself would not be in steady state, that distribution, in a hypothetical material with $\nu=\frac{\nu}{k}$ would be in steady state, allowing us to write:
 \begin{equation}
     \label{eq:pseudo-steady}
@@ -478,9 +517,9 @@ Typically, this revolves around a Helmholtz coefficient termed ``material buckli
     \label{eq:mat-buckling}
     B=\frac{\nu\Sigma_f - \Sigma_a}{D}
 \end{equation}
-This ``material'' buckling can then be compared to the ``geometric'' buckling found through the geometry of the problem to determine what materials or what geometry would be required to produce a critical system (if such a feat is posible).
+This ``material'' buckling can then be compared to the ``geometric'' buckling found through the geometry of the problem to determine what materials or what geometry would be required to produce a critical system (if such a feat is possible).\\
 
-For a non-critical system of determined geometry and material, if the unknown multiplication rate $k$ is folded into this definition, one can define a hypothetically critical material buckling $B_c$:
+For a non-critical system of determined geometry and material, if the unknown multiplication rate $k$ is folded into this definition as in Eq.~\ref{eq:pseudo-steady}, one can define a hypothetically critical material buckling $B_c$:
 \begin{equation}
     \label{eq:crit-buckling}
     B_c=\frac{\frac{1}{k}\nu\Sigma_f - \Sigma_a}{D}
@@ -499,17 +538,18 @@ and form a Helmholtz equation for multiplying flux within a 1D medium of uniform
     \end{gathered}
 \end{equation}
 Using boundary conditions, an imposed scale (such as normalizing reactor power to 1), and assuming a non-trivial solution, one would then solve for a value of $B_c$ by solving for $B_c$ which allow the spatial distribution to line up with such conditions.
-Because $B_c$ corresponds to an individual $k$ value (Eq.~\ref{eq:crit-buckling}), this condition typically reveals an infinite series of $B_c$.
+Because an individual value $B_c$ corresponds to an individual $k$ value (Eq.~\ref{eq:crit-buckling}), this condition typically reveals an infinite series of $B_c$.
 However, since for systems after enough time we only need to consider the dominant mode of flux, we can consider only the smallest value of $B_c$, which results in the largest multiplication rate $k$:
 \begin{equation}
     \label{eq:k-buck}
     k=\frac{\nu \Sigma_{f1}}{\left(\left(B_c^{2} D\right)+\Sigma_{a1}\right)}
 \end{equation}
 Then, one can describe the long-term flux distribution, using the actual material buckling $B$, and its multiplication rate $k$.
+For a more thorough description of such combinations of modes of flux, one may wish to consult a separation-of-variables derivation of the time-dependent flux\cite{novak_lecture11_2026}.
 
 \subsection{Analytical Solution}
 Consider, for example, the system of \figref{prob2_setup}, but this time with a region 1 which has a fission cross-section $\Sigma_f$, rather than a distributed source.
-In this problem, consider region~1 to have properties $\Sigma_{a1}=0.066$~[1/cm], $\Sigma_{f1}=0.02787$~[1/cm], $D_1=0.79$~[cm], $\nu=2.4$~[neutrons/fission], and region~2 the properties $\Sigma_{a2}=0.000709$~[1/cm] and $D_2=1.0$~[cm]. \\
+In this problem, consider region~1 to have properties $\Sigma_{a1}=0.066$~[1/cm], $\Sigma_{f1}=0.02787$~[1/cm], $D_1=0.79$~[cm], $\nu=2.4$~[neutrons/fission], and region~2 the properties $\Sigma_{a2}=0.000709$~[1/cm] and $D_2=1.0$~[cm]\cite{novak_computer_2026}. \\
 
 Region 1 may be described with the multiplying diffusion equation of Eq.~\ref{eq:noncrit-mult}:
 \begin{equation}
@@ -711,8 +751,8 @@ Starting from a reasonable initial guess of $k$ and $\phi$, this process may the
     \end{gathered}
 \end{equation}
 Using this method for discretizations of $N\in\left\{10, 20, 40, 80, 160\right\}$ cells, distributions of $\phi$ and their corresponding $k$ values were solved for, and may be seen in \figref{P3_a10} for geometry with $a=10$, in \figref{P3_a25} for $a=25$, and \figref{P3_a50} for $a=50$, with $k$ values additionally compared in Table~\ref{tab:kvals}. 
-
-
+These distributions and $k$ values are also compared to those found using the previously described analytical solution.
+\FloatBarrier
 
 % K results 
 % a (cm) & b (cm) & Numerical Solutions &&&&& Analytical
@@ -737,7 +777,16 @@ a (cm)&b (cm)& N = 10  & N = 20  & N = 40  & N = 80  & N = 160 & Analytic\\\hlin
 \FloatBarrier
 \section{Conclusions}\label{sec:conc}
 
+The objectives of this report were largely met.
+Finite-difference simulations of both the multiplying and non-multiplying systems were successfully constructed and observed to converge towards the flux distributions and (for the multiplying system) multiplication rates predicted using an exact analytical solution.\\
 
+Namely, the convergence of order $\bigO(h^{1.009})$ observed for the numerical simulation of the non-multiplying system is sufficiently high as expected.
+In addition, several properties about the general design of the multiplying system were assessed using the analytical solution, such as minimum and maximum critical region~1 thicknesses $a$ (23.505 and 46.852~cm, respectively) and the reflector thickness $b$ required for arbitrary multiplying region thicknesses $a$.\\
+
+The effective convergence of all numerical solutions to exact analytical equivalents highlights both their robustness where analytical solutions may be problematic or painful, and their weakness where computational resources are limited.
+Additionally, the finite-difference solutions used are still designed around simple, 1D nodal geometry, and would be ill-suited towards finely detailed geometry themselves.\\
+
+These results give much opportunity to expand on these simulations in future work, such as by discretizing over more complicated or multidimensional geometry, solving for flux over time, or discretizing over energy (multigroup theory).
 
 % \bibliographystyle{sty/ieeetran}
 \pagebreak\printbibliography
