@@ -600,8 +600,29 @@ which may then be used alongside Eq.~\ref{eq:c5-c2} for the two final flux distr
 
 Returning to the criticality condition of Eq.~\ref{eq:crit-condition}, we may glean useful information about the reactor.\\
 
-For instance, if we wanted a geometry which was perfectly critical, then we could impose that $B_c=B$, since $k=1$
+For instance, if we wanted a geometry which was perfectly critical, then we could impose that $B_c=B$, since $k=1$, and solve for $a$ or $b$ given the other:
+\begin{equation}
+    \label{eq:crit-ab}
+    B\tan(Ba) = \frac{D_2}{D_1L_2\tanh(\frac{b}{L_2})}
+\end{equation}
+for instance, we could use this condition as reflector thickness $b$ approaches infinity to solve for the minimum thickness of the multiplying layer $a$:
+\begin{equation}
+    \label{eq:min-a}
+    B\tan(Ba_{min}) = \frac{D_2}{D_1L_2}
+\end{equation}
+which, for the given material parameters, evaluates to 23.505~cm.
+Likewise, the critical $a$ for a system with \emph{no} shielding would indicate the maximum thickness of the multiplying layer, above which no matter how little reflection was added, the reactor would be supercritical.
+While Eq.~\ref{eq:crit-ab} is not itself defined at $b=0$, the same result may be analogously found by applying the (extrapolation-ignored extrapolated) vacuum boundary condition directly to $x=a$ in this scenario:
+\begin{equation}
+    \label{eq:max-a}
+    \phi_1(a)=0=\cos\left(Ba\right) 
+\end{equation}
+which, for the given material parameters, evaluates to 46.852~cm.\\
 
+Using Eq.~\ref{eq:crit-ab}, the reflector thickness $b$ required for several given lengths of $a$ to form critical reactors are calculated and tabulated in Table~\ref{tab:bvals} (where possible).
+
+% Critical a when no multiplier: 46.85187 cm (\cos\left(Ba\right) = 0)
+% Critical a as b approaches inf: 23.50502 cm (BD_{1} = \frac{D_{2}}{L_{2}\tan(Ba)})
 \begin{table}
     \label{tab:bvals}
     \caption{The reflector thicknesses $b$ required to make a system with a multiplying region $a$ thick critical. Systems which with any thickness $b$ would be subcritical are denoted $k<1$, and ones which would be supercritical for any $b$ are denoted $k>1$.}
@@ -691,8 +712,7 @@ Starting from a reasonable initial guess of $k$ and $\phi$, this process may the
 \end{equation}
 Using this method for discretizations of $N\in\left\{10, 20, 40, 80, 160\right\}$ cells, distributions of $\phi$ and their corresponding $k$ values were solved for, and may be seen in \figref{P3_a10} for geometry with $a=10$, in \figref{P3_a25} for $a=25$, and \figref{P3_a50} for $a=50$, with $k$ values additionally compared in Table~\ref{tab:kvals}. 
 
-% Critical a when no multiplier: 46.85187 cm (\cos\left(Ba\right) = 0)
-% Critical a as b approaches inf: 23.50502 cm (BD_{1} = \frac{D_{2}}{L_{2}\tan(Ba)})
+
 
 % K results 
 % a (cm) & b (cm) & Numerical Solutions &&&&& Analytical
