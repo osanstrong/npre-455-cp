@@ -63,12 +63,12 @@ def err(actual, target):
     diff = actual-target
     return np.linalg.norm(diff) / np.linalg.norm(target)
 
-def Rf(phi: np.ndarray, Xf:np.ndarray, h):
+def Rf(phi: np.ndarray, Xf:np.ndarray, nu, h):
     '''
-    For given flux and fission cross section find fission reaction rate
+    For given flux and fission cross section find neutron production rate
     Uses trapezoidal integration across x of phi and cross section
     '''
-    Rf = sum([0.5*(phi[i-1]*Xf[i-1]+phi[i]*Xf[i])*h for i in range(1,len(Xf))])
+    Rf = sum([0.5*(phi[i-1]*nu*Xf[i-1]+phi[i]*nu*Xf[i])*h for i in range(1,len(Xf))])
     return Rf
 def trapz(dist: np.ndarray, h):
     return sum([0.5*(dist[i-1]+dist[i])*h for i in range(len(dist))])
@@ -94,7 +94,7 @@ def powit_kPhi(M:np.ndarray, F:np.ndarray, h:float, Xf:np.ndarray|None=None, deb
 
         nphi = iM @ (F @ lphi) / lk
         # print(f"nphi: {nphi.shape}")
-        rrate = Rf(nphi, Xf, h) if not Xf is None else la.norm(nphi, 1)*h
+        rrate = Rf(nphi, Xf, nu, h) if not Xf is None else la.norm(nphi, 1)*h
         nphi /= rrate
         # nk = la.norm((F@nphi)[1:N], 1) / la.norm((M@nphi)[1:N], 1)
         nk = trapz(F@nphi, h) / trapz(M@nphi, h)
@@ -134,7 +134,7 @@ def xPhi_an(av, bv, k):
 
     B = ((nu*Xf1/k - Xa1)/D1)**0.5
 
-    unscl_Rf = (Xf1*np.sin(B*av)/B)
+    unscl_Rf = (nu*Xf1*np.sin(B*av)/B)
     C1 = 1  / unscl_Rf
     C2 = C1* np.cos(B*av) / (np.sinh(-bv/L2))
 

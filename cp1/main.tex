@@ -8,7 +8,7 @@
 % \itshape TA: Shaffer Bauer \\
 % \itshape TA: Justin Jia \\
 }
-\date{March 24th, 2026}
+\date{March 25th, 2026}
 
 \usepackage[
     style=ieee
@@ -650,14 +650,14 @@ for instance, we could use this condition as reflector thickness $b$ approaches 
     \label{eq:min-a}
     B\tan(Ba_{min}) = \frac{D_2}{D_1L_2}
 \end{equation}
-which, for the given material parameters, evaluates to 23.505~cm.
+which, for the given material parameters, evaluates to $a=23.505$~cm.
 Likewise, the critical $a$ for a system with \emph{no} shielding would indicate the maximum thickness of the multiplying layer, above which no matter how little reflection was added, the reactor would be supercritical.
 While Eq.~\ref{eq:crit-ab} is not itself defined at $b=0$, the same result may be analogously found by applying the (extrapolation-ignored extrapolated) vacuum boundary condition directly to $x=a$ in this scenario:
 \begin{equation}
     \label{eq:max-a}
-    \phi_1(a)=0=\cos\left(Ba\right) 
+    \phi_1(a)=0=C_2\cos\left(Ba_{max}\right) 
 \end{equation}
-which, for the given material parameters, evaluates to 46.852~cm.\\
+which, for the given material parameters (and any non-trivial solution), evaluates to $a=46.852$~cm.\\
 
 Using Eq.~\ref{eq:crit-ab}, the reflector thickness $b$ required for several given lengths of $a$ to form critical reactors are calculated and tabulated in Table~\ref{tab:bvals} (where possible).
 
@@ -684,7 +684,7 @@ with $\left[-\ddx D\ddx\phi\right]_i$ and shorthand terms $\dL{i}$ and $\dR{i}$ 
     -d_L\phi_{i-1} + \left(d_L+d_R+\Sigma_{a,i}\right)\phi_i - d_R\phi_{i+1} = \frac{1}{k}\nu\Sigma_{f,i}\phi_i
 \end{equation}
 For the boundary nodes $\phi_0$ and $\phi_N$, the same boundary conditions as in Eqs.~\ref{eq:sym-findiff} and \ref{eq:vac-findiff} may be applied.
-Together, these yield a matrix equation similar to \ref{eq:prob2-matrix}
+Together, these yield a matrix equation similar to \ref{eq:prob2-matrix}:
 
 \begin{equation}
     \label{eq:prob3-matrix}
@@ -735,9 +735,9 @@ This equation is true for any (eigenvector) distribution of flux $\phi$ which is
     \end{gathered}
 \end{equation}
 where the integral evaluations for $k_{n+1}$ are carried out using a numerical integral process such as a trapezoidal Reimann sum.
-To maintain consistent scales of $\phi$, after every iteration the distribution is then normalized using a similar integral evaluation of power, to normalize power to 1:
+To maintain consistent scales of $\phi$, after every iteration the distribution is then normalized using a similar integral evaluation of neutron production, to normalize production to 1:
 \begin{gather}
-    P=\int_{0}^{a+b}\Sigma_{f}\phi dx\\
+    P=\int_{0}^{a+b}\nu\Sigma_{f}\phi dx\\
     \phi = \frac{\phi}{P}
 \end{gather}
 \\
