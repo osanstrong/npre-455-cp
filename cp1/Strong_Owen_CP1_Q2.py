@@ -41,49 +41,25 @@ def fin_diff_sol(N, debug=False):
     b_mat = np.zeros(N+1)
     b_mat[1:N] = np.array(S_vals[1:N])
 
-    # A_mat[0,0:2] = [-1, 1]
-    A_mat[0,0:3] = [-3, 4, -1]
-    # A_mat[0,0:4] = [-11, 18, -9, 2]
+    # A_mat[0,0:2] = [-1, 1] # 2 node
+    A_mat[0,0:3] = [-3, 4, -1] # 3 node
+    # A_mat[0,0:4] = [-11, 18, -9, 2] # 4 node
     for i in range(1,N):
         lD = D[i-1]
         iD = D[i]
         rD = D[i+1]
-        iL = L[i]
+        hD = iD / (0.5 * h**2)
         lfrac = lD/(iD+lD)
         rfrac = rD/(iD+rD)
-        # print(F"D: {lD}, {iD}, {rD}")
-        hD = iD / (0.5 * h**2)
-        # A_mat[i,i-1:i+2] = np.array([
-        #     -hD*lfrac,
-        #     hD*(lfrac+rfrac) + X[i],
-        #     -hD*rfrac
-        # ])
 
-        vals = (D[i]/(h**2/2)) * np.array([
-            -D[i-1]/(D[i]+D[i-1]),
-            D[i-1]/(D[i]+D[i-1]) + D[i+1]/(D[i]+D[i+1]),
-            -D[i+1]/(D[i]+D[i+1])
+        vals = hD * np.array([
+            -lfrac,
+            lfrac + rfrac,
+            -rfrac
         ]) + np.array([
             0, X[i], 0
         ])
-        # print(f"Vals: {vals}")
         A_mat[i,i-1:i+2] = vals
-        # A_mat[i,i-1:i+2] = (D[i]/(h**2/2)) * np.array([
-        #     -D[i-1]/(D[i]+D[i-1]),
-        #     D[i-1]/(D[i]+D[i-1]) + D[i+1]/(D[i]+D[i+1]),
-        #     -hD*D[i+1]/(D[i]+D[i+1])
-        # ]) + np.array([
-        #     0, X[i], 0
-        # ])
-        # A_mat[i,i-1:i+2] = np.array([
-        #     -iD/(h**2),
-        #     2*iD/(h**2) + X[i],
-        #     -iD/(h**2)
-        # ])
-    # A_mat[N,N-1:N+1] = [
-    #     -0.5*D[N]/h,
-    #     0.25 + 0.5*D[N]/h
-    # ]
     A_mat[N,N] = 1
     if (debug):
         print("_"*10)
@@ -92,15 +68,11 @@ def fin_diff_sol(N, debug=False):
         print(f"b: {b_mat}")
         print(f"S: {S_vals}")
     phi = np.linalg.solve(A_mat, b_mat)
-    # phi = np.invert(A_mat) * b_mat
     return phi
 
 for N in NL:
     x = np.linspace(0, a+b, N+1)
     phi = fin_diff_sol(N)
-    # phi /= np.linalg.norm(phi, 1)
-    # print(x)
-    # print(phi)
     plt.plot(x, phi, label=f"Numerical, N = {N}")
 
 # Isolated: Code which solves for coefficients C1 and C2
