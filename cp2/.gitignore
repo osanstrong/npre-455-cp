@@ -1,0 +1,11 @@
+./.vscode/**
+**.aux
+**.bbl
+**.bcf
+**.lof
+**.log
+**.lot
+**.out
+**.run.xml
+**.toc
+**Zone.Identifier

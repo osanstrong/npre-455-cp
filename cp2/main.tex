@@ -1,0 +1,179 @@
+\documentclass[11pt]{article} %font size at 11
+
+\usepackage[english]{babel}
+\usepackage[top=2.5cm,bottom=2cm,left=3cm,right=3cm]{geometry}
+
+%Images
+\usepackage{graphicx} % Package required for inserting images
+
+%Tables
+\usepackage{booktabs} % Package provides helpful table formatting
+\usepackage{multicol} % Package for helpful table formatting
+\usepackage{multirow} % Package for helpful table formatting
+
+%Math
+\usepackage{amsmath} % Package provides useful math environments
+\usepackage{amssymb} % Package provides more symbols than base LaTeX
+
+%Lists
+\usepackage{enumitem} %Package for helpful list formatting
+
+\usepackage[colorlinks=true, urlcolor=blue, linkcolor=black, citecolor=black]{hyperref} % Package for hyperlinks
+\usepackage[T1]{fontenc} %Times New Roman
+
+
+
+%%% REMOVE bibtex OR biblatex, conflicts can arise
+%\usepackage{bibtex}
+%Older package for citations and bibliography generation. Use this package if you do not want to have a seperate .bib file. This package requires much more user effort. This package requires you to provide the citations. 
+
+\usepackage{biblatex} %Newer package for citations and bibliography generation. Use this package if you want a seperate .bib file. This package was made to declutter .tex files, and requires little user effort. This package does not require you to make the citations, as it generates them for you.
+
+\addbibresource{refs.bib} %needed for biblatex
+\usepackage{csquotes} % biblatex complains without this
+
+
+
+\usepackage{lipsum} % do not include this, this is for lorem ipsum text
+
+\title{Project Title}
+\author{Your Name}
+\date{\today}
+
+\begin{document}
+\pagenumbering{gobble}
+\maketitle
+\clearpage
+
+\tableofcontents
+\clearpage
+
+\listoffigures
+\listoftables
+\clearpage
+\pagenumbering{arabic}
+
+\section{Introduction}\label{sec:introduction}
+Lets begin with how to set-up a \LaTeX\, project! One of the cool things about \LaTeX is that you do not need a specific text editor to create or edit documents. However, the easiest way to learn \LaTeX\, is using a tool like \href{https://www.overleaf.com}{Overleaf}. Overleaf requires no experience to begin using as it is created with beginners in mind, and has loads of helpful tutorials. Also, you have a 'pro' account funded by UIUC, and so you can make collaborative projects (like google drive). To take advantage of this account, go to the \href{https://www.overleaf.com/register}{Overleaf register page}, select 'Log in with SSO' and follow the prompts. To begin a blank project, Overleaf has a helpful page \href{https://www.overleaf.com/learn/how-to/Creating_a_document_in_Overleaf}{here}. To use this template, with some of the required formatting done for you, please refer to Overleaf's helpful tutorial on uploading existing projects \href{https://www.overleaf.com/learn/how-to/Uploading_a_project}{here}.
+
+This section should include an introduction to the relevant concepts for this project. This section should include background on the concepts in this project, an introduction of the general equations used, and definitions. 
+
+For example, the general neutron diffusion equation is an equation. It is useful for modeling neutron diffusion. It comes from a derivation. That derivation is not required, but you should discuss the process undertaken to obtain the equation (0th and 1st Moment\dots). The general neutron diffusion equation is presented in Equation \ref{eq:generalneutrondiffusion}. For a complete list of symbols available for use in a math environment, please reference \href{https://www.cmor-faculty.rice.edu/~heinken/latex/symbols.pdf}{this} page. There are a great deal of mathematical features provided by the amsmath package. For complete documentation, please reference \href{https://www.latex-project.org/help/documentation/amsldoc.pdf}{this} page. As a reminder, \textit{all} equations should be numbered to the right.
+
+\newcommand{\pd}[3]{\frac{\partial^{#3}#1}{\partial{#2}^{#3}}}
+%This makes a new command '\pd' that takes in three arguments. The first is what your applying the derivative to, the second is the independent variable, and the third is the order. An example usage is \pd{T}{x}{}, which will result in dT/dx or \pd{T}{x}{2} which will result in d^2T/dx^2
+\begin{equation}
+    \frac{1}{v}\pd{\phi}{t}{} - \nabla\cdot D \nabla\phi + \Sigma_a\phi = \Sigma_s\phi + \nu\Sigma_f\phi+S
+    \label{eq:generalneutrondiffusion}
+\end{equation}
+
+Another important thing in all projects is references. There are two powerful citation packages: BibTeX and BibLaTeX. They are similair in their respective end results, however BibLaTeX typically requires less user effort, and is actively maintained and developed --- unlike BibTex.To use either, make a refs.bib file, and insert all of your citations there. Then, to cite a reference, simply use the command \verb|\cite{}|. For example, If I wanted to cite NPRE 455 lecture notes \cite{LectureNotes}. What about page numbers? Simply add the page number (or range) you want to the cite command: \verb|\cite[page]{reference}|, \cite[5-10]{LectureNotes}. All citations, as soon as they are used, will automatically be added to your bibliography! To see how to construct the bibliography, go to the References section, Section \ref{sec:References}.
+
+\textit{\lipsum[1-8]}
+
+\clearpage %clearpage and newpage are similair, use clearpage at the end of sections, and newpage inside of sections.
+
+\section{Question 1}\label{sec:question1}
+
+After your Introduction, you should have one section for each of the problems in this assignment. For example, for CP-1 there should be 3 sections. Each of these question sections should have an introduction to the problem, and then subsequent subsections for necessary theory/ derivations and for results. In each problem introduction, you should explicitly describe the problem being solved, the significance, and present the problem's geometry and properties. As a reminder, figure captions should be centered below the figure, and table captions should be centered above the table. To reference tables, figures, and equations in text you use the following command: \verb|\ref{label}|. For example, if I want to reference the image with the caption 'This image is super awesome', I would say \ref{fig:awesomefigure}. To tell \LaTeX where to put the image, you have a few options. You will notice in the command \verb|\begin{figure}[]| there is a set of brackets. This is how you tell \LaTeX where to put the image. There are three relevant commands: h for here, t for top, and b for bottom. All of these commands tell latex to put it in a convenient spot close to where you want. If you really want a figure somewhere and the compiler is refusing to put it there, you would add an exclamation point before the letter (!h). This tells the compiler to stop messing around and to put it where you want.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/frog.jpg}
+    \caption{This image is super awesome}
+    \label{fig:awesomefigure}
+\end{figure}
+
+\begin{table}[h]
+    \centering
+    \caption{This table is super awesome!}
+    \label{tab:awesometable}
+    %vertically stretches each table entry, otherwise its a bit cramped
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{|c|c|}
+         \toprule %thick horizontal line, good for emphasis
+         \bottomrule %^^^^^
+         Material Property & Value \\
+         \toprule 
+         \hline
+         $\Xi$ & 0 \\
+         \hline % adds horizontal line in table
+         $\Sigma$ & 1 \\
+         \hline
+         $a$ & 2\\
+         \hline
+    \end{tabular}
+\end{table}
+
+\subsection{Theory}
+In this subsection, you should present the relevant theory and full derivation of solutions. You should derive analytical solutions starting from the general equation, apply conditions to this general equation (steady-state, 1-D,\dots), list boundary conditions, and then solve. For example, the general heat diffusion equation.
+\begin{equation}
+    \nabla\cdot k\nabla T + q''' = \rho c_p \pd{T}{t}{}
+\end{equation}
+
+Applying, steady state, no heat generation ($q''' = 0$), constant material properties, and then 1-D Cartesian coordinates ($\hat{x}$):
+
+\begin{subequations}
+    \begin{equation}
+        \nabla\cdot k\nabla T + q''' = 0
+    \end{equation}
+    \begin{equation}
+        \nabla\cdot k\nabla T = 0
+    \end{equation}
+    \begin{equation}
+        k\nabla^2T=0
+    \end{equation}
+    \begin{equation}
+        k\pd{T}{x}{2} = 0
+    \end{equation}
+\end{subequations}
+
+Next, to list our boundary conditions.
+            
+\begin{enumerate}[leftmargin=3cm,label=\textbf{\arabic*.})]
+    \item First boundary condition
+    \item Second boundary condition
+\end{enumerate}
+
+Now with everything defined, solve! After solving for the analytical solution, present the derivation of any numerical models used (i.e. Finite Difference Stencil). 
+
+\textit{\lipsum[2-4]}
+
+\clearpage
+\subsection{Results}
+Now with all problem set-up and derivations taken care o, this subsection focuses on results. Present your results in the order detailed in the assignment. Make it easy for the graders to review! As a reminder, \textit{ALL} figures and tables should have labels! Results figures should be easy to read and high quality. Don't forget grid lines!
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/demoplot.png}
+    \caption{This image is also super awesome}
+    \label{fig:results}
+\end{figure}
+
+With the bulk content done, lets dive a little deeper into tables! In Table \ref{tab:cooltable} you will see three commands not present in Table \ref{tab:awesometable}: \verb|\multicolumn{}{}{}|, \verb|\multirow{}{}{}|, and \verb|\cline{}|. The first two merge cells horizontally and vertically, respectively. \verb|\cline{}| draws a horizontal line for the specified range of cells.
+
+\begin{table}[h]
+    \centering
+    \renewcommand{\arraystretch}{1.5}
+    \caption{This table shows cool formatting}
+    \label{tab:cooltable}
+    \begin{tabular}{|c|c|c|c|c|}
+         \toprule
+         \bottomrule
+         \multicolumn{2}{|c}{Text 1} & \multicolumn{3}{|c|}{Text 2} \\
+         \hline
+         Words 1 & Words 2 & Words 3 & Word 4 & Words 5 \\
+         \hline
+         \multirow{2}{*}{Other 1} & Other 2 & Other 3 & Other 4 & Other 5\\
+         \cline{2-5}
+         & Other 6 & Other 7 & Other 8 & Other 9\\
+         \hline
+    \end{tabular}
+\end{table}
+
+\textit{\lipsum[2-3]}
+
+\clearpage
+\section{References}\label{sec:References}
+\printbibliography[heading=none]
+\end{document}
