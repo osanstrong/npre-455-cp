@@ -17,10 +17,10 @@ L_C2 = an.L2C
 L_M1 = an.LM
 L_M2 = an.L2M
 
-Xa_C1 = D_C1 / (L_C1**2)
-Xa_C2 = D_C2 / (L_C2**2)
-Xa_M1 = D_M1 / (L_M1**2)
-Xa_M2 = D_M2 / (L_M2**2)
+Xr_C1 = D_C1 / (L_C1**2)
+Xr_C2 = D_C2 / (L_C2**2)
+Xr_M1 = D_M1 / (L_M1**2)
+Xr_M2 = D_M2 / (L_M2**2)
 
 Xs_C12 = an.Es12C # Region C, scattering cross section from 1 to 2, cm⁻¹
 Xs_M12 = an.Es12M
@@ -62,12 +62,12 @@ def fin_diff_sol(N, debug=False):
     S_vals = np.zeros(nodes*2)
     S_vals[:bound] = S_C1
 
-    # Absorption cross section
-    Xa = np.zeros(nodes*2)
-    Xa[:bound] = Xa_C1
-    Xa[bound:nodes] = Xa_M1
-    Xa[nodes:nodes+bound] = Xa_C2
-    Xa[nodes+bound:] = Xa_M2
+    # Removal cross section
+    Xr = np.zeros(nodes*2)
+    Xr[:bound] = Xr_C1
+    Xr[bound:nodes] = Xr_M1
+    Xr[nodes:nodes+bound] = Xr_C2
+    Xr[nodes+bound:] = Xr_M2
 
     # Just scattering cross section
     # Since these are defined for combinations of energy groups,
@@ -119,8 +119,7 @@ def fin_diff_sol(N, debug=False):
             lfrac + rfrac,
             -rfrac
         ]) + np.array([
-            # 0, Xa[i]+Xs_12[i], 0
-            0, Xa[i], 0 
+            0, Xr[i], 0 
         ])
         A_mat[i,i-1:i+2] = vals
 
@@ -144,7 +143,7 @@ def fin_diff_sol(N, debug=False):
             lfrac + rfrac,
             -rfrac
         ]) + np.array([
-            0, Xa[i], 0
+            0, Xr[i], 0
         ])
         A_mat[i,i-1:i+2] = vals
         A_mat[i,i-nodes] = -Xs_12[i-nodes]
@@ -156,7 +155,7 @@ def fin_diff_sol(N, debug=False):
         print(f"A: {A_mat}")
         print(f"b: {b_mat}")
         print(f"S: {S_vals}")
-        print(f"Xa: {Xa}")
+        print(f"Xa: {Xr}")
         print(f"Xs12: {Xs_12}")
     phi = np.linalg.solve(A_mat, b_mat)
     return phi
