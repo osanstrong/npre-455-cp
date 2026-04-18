@@ -165,25 +165,34 @@ def fin_diff_sol(N, debug=False):
 
 
 
-def plot_anal(n):
+def vbar(x, label, c=None, style="dashed"):
+    [ymin, ymax] = plt.ylim()
+    plt.vlines(x, ymin, ymax, label=label, colors=c, linestyles=style)
+    plt.ylim(ymin, ymax)
+
+def plot_anal(n, c):
     xpts, phi1 = flux1(n)
     xpts, phi2 = flux2(n)
 
-    plt.plot(xpts, phi1, label="Fast Flux (Analytical)")
-    plt.plot(xpts, phi2, label="Thermal Flux (Analytical)")
+    plt.plot(xpts, phi1, label="Fast Flux (Analytical)", c=c)
+    plt.plot(xpts, phi2, label="Thermal Flux (Analytical)", c=c, linestyle="dashed")
 
 
 # N = 10
-for N in [1000]:
+i = 1
+for N in [5, 10, 20, 40]:
     np.set_printoptions(linewidth=1000, precision=3)
     phi = fin_diff_sol(N, debug=False)
     x = np.array([n for n in range(N+1)]) * (a+b)/N
-    plt.plot(x, phi[:N+1], label=f"Fast Flux (N={N})")
-    plt.plot(x, phi[N+1:], label=f"Thermal Flux (N={N})")
+    plt.plot(x, phi[:N+1], label=f"Fast Flux (N={N})", c=f"C{i}")
+    plt.plot(x, phi[N+1:], label=f"Thermal Flux (N={N})", c=f"C{i}", linestyle="dashed")
+    i+=1
 # plt.plot(x, phi, label="")
-plot_anal(1000)
+plot_anal(1000, f"C{i}")
+vbar(a, f"a = {a} cm")
 plt.xlabel("x (cm)")
 plt.ylabel("Flux (1/cm²s)")
+plt.grid(which="both")
 plt.legend()
 plt.show()
 
