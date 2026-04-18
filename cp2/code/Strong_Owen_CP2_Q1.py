@@ -1,29 +1,29 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from analytic_solution_cp2 import flux1, flux2
+import analytic_solution_cp2 as an
 
 
+a = an.a
+b = an.b
 
-a = 10
-b = 10
+D_C1 = an.D1C # Region C, group 1 (fast), cm
+D_C2 = an.D2C
+D_M1 = an.DM
+D_M2 = an.D2M
 
-D_C1 = 1 # Region C, group 1 (fast), cm
-D_C2 = 2
-D_M1 = 1.7
-D_M2 = 1
-
-L_C1 = 10 # cm
-L_C2 = 3
-L_M1 = 5 
-L_M2 = 1
+L_C1 = an.L1C # cm
+L_C2 = an.L2C
+L_M1 = an.LM
+L_M2 = an.L2M
 
 Xa_C1 = D_C1 / (L_C1**2)
 Xa_C2 = D_C2 / (L_C2**2)
 Xa_M1 = D_M1 / (L_M1**2)
 Xa_M2 = D_M2 / (L_M2**2)
 
-Xs_C12 = 0.001 # Region C, scattering cross section from 1 to 2, cm⁻¹
-Xs_M12 = 0.2
+Xs_C12 = an.Es12C # Region C, scattering cross section from 1 to 2, cm⁻¹
+Xs_M12 = an.Es12M
 
 S_C1 = 1e12 #Region C, group 1 source, cm⁻³s⁻¹
 
@@ -119,7 +119,8 @@ def fin_diff_sol(N, debug=False):
             lfrac + rfrac,
             -rfrac
         ]) + np.array([
-            0, Xa[i]+Xs_12[i], 0
+            # 0, Xa[i]+Xs_12[i], 0
+            0, Xa[i], 0 
         ])
         A_mat[i,i-1:i+2] = vals
 
@@ -174,12 +175,12 @@ def plot_anal(n):
 
 
 # N = 10
-for N in [5, 10, 20, 40, 100, 1000]:
+for N in [1000]:
     np.set_printoptions(linewidth=1000, precision=3)
     phi = fin_diff_sol(N, debug=False)
     x = np.array([n for n in range(N+1)]) * (a+b)/N
     plt.plot(x, phi[:N+1], label=f"Fast Flux (N={N})")
-    # plt.plot(x, phi[N+1:], label=f"Thermal Flux (N={N})")
+    plt.plot(x, phi[N+1:], label=f"Thermal Flux (N={N})")
 # plt.plot(x, phi, label="")
 plot_anal(1000)
 plt.xlabel("x (cm)")
