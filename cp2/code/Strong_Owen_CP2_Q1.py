@@ -3,6 +3,8 @@ import numpy as np
 from analytic_solution_cp2 import flux1, flux2
 import analytic_solution_cp2 as an
 
+from scipy.stats import linregress as linreg
+
 
 a = an.a
 b = an.b
@@ -162,6 +164,9 @@ def fin_diff_sol(N, debug=False):
 
 
 
+def err(actual, target):
+    diff = actual-target
+    return np.linalg.norm(diff) / np.linalg.norm(target)
 
 
 
@@ -180,12 +185,17 @@ def plot_anal(n, c):
 
 # N = 10
 i = 1
-for N in [5, 10, 20, 40]:
+
+N_LIST = [5, 10, 20, 40]
+for N in N_LIST:
     np.set_printoptions(linewidth=1000, precision=3)
     phi = fin_diff_sol(N, debug=False)
     x = np.array([n for n in range(N+1)]) * (a+b)/N
+    
     plt.plot(x, phi[:N+1], label=f"Fast Flux (N={N})", c=f"C{i}")
     plt.plot(x, phi[N+1:], label=f"Thermal Flux (N={N})", c=f"C{i}", linestyle="dashed")
+
+    
     i+=1
 # plt.plot(x, phi, label="")
 plot_anal(1000, f"C{i}")
@@ -196,4 +206,28 @@ plt.grid(which="both")
 plt.legend()
 plt.show()
 
+
+err_Ns = [50, 100, 200, 400, 800, 1600]
+err_list = []
+for N in err_Ns:
+    np.set_printoptions(linewidth=1000, precision=3)
+    phi = fin_diff_sol(N, debug=False)
+
+    anal_sol = np.zeros(len(phi))
+    anal_sol[:N+1] = flux1(N)[1]
+    anal_sol[N+1:] = flux2(N)[1]
+    error = err(phi, anal_sol)
+    err_list.append(error)
+
+
+err_h = [(a+b)/N for N in err_Ns]
+res = linreg(np.log(err_h), np.log(err_list))
+n = res.slope
+plt.plot(err_h, err_list, label=f"Observed, O(h^{n:.5f})")
+plt.xlabel("h (cm)")
+plt.ylabel("Relative L2 error")
+plt.loglog()
+plt.grid(which="both")
+plt.legend()
+plt.show()
 
