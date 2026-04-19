@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import numpy.linalg as la
 import csv
+from math import factorial as fac
 
 def get_flux(path):
     '''
@@ -249,5 +250,26 @@ vbar(a, f"a = {a} cm", c="C0", style="dotted")
 plt.xlabel("x (cm)")
 plt.ylabel("Flux (cm⁻²s⁻¹)")
 plt.grid(which="both")
+plt.legend()
+plt.show()
+
+
+# Legendre expansion
+def Pnx(n, x:np.ndarray):
+    '''
+    Evaluate the n'th Legendre Polynomial over the given values of x.
+    Uses Rodrigues' formula
+    '''
+    c = np.zeros(n+1)
+    c[n] = 1
+    return np.polynomial.legendre.legval(x, c)
+
+x = np.linspace(-1, 1, 100)
+for n in range(50):
+    P = Pnx(n, x)
+    plt.plot(x, P, label=f"L{n}")
+
+plt.xlabel("x")
+plt.ylabel("y")
 plt.legend()
 plt.show()
