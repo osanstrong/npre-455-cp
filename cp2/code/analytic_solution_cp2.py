@@ -99,7 +99,7 @@ def flux1(n):
     else:
       phi1.append(C4 * sinh((a+b-x)/LM))
 
-  return xpts, phi1
+  return xpts, np.array(phi1)
 
 def flux2(n):
   xpts = np.linspace(0, a+b, n+1)
@@ -110,4 +110,4 @@ def flux2(n):
     else:
       phi2.append(C10*sinh(x/L2M)+C11*cosh(x/L2M)+C12*cosh((a+b-x)/LM)+C13*sinh((a+b-x)/LM))
 
-  return xpts, phi2
+  return xpts, np.array(phi2)
