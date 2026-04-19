@@ -31,8 +31,8 @@ def plot_2550():
 
 
 
-a = 10 # cm
-# a = 25 #cm
+# a = 10 # cm
+a = 25 #cm
 b = 50 # cm
 
 def plot_reference(c=None):
@@ -46,38 +46,44 @@ def plot_reference(c=None):
     plt.plot(xf, ff, label="Fast (reference)", c=c)
     plt.plot(xt, ft, label="Thermal (reference)", c=c, linestyle="dashed")
 
-if a == 10:
-    D_C1 = 0.981
-    D_C2 = 0.284
-    D_M1 = 1.06
-    D_M2 = 0.179
+def set_params(new_a):
+    global a
+    a = new_a
+    global D_C1, D_C2, D_M1, D_M2, Xs_C12, Xs_M12, nXf_C1, nXf_C2, Xa_C1, Xa_C2, Xa_M1, Xa_M2
+    if a == 10:
+        D_C1 = 0.981
+        D_C2 = 0.284
+        D_M1 = 1.06
+        D_M2 = 0.179
 
-    Xs_C12 = 5.36e-5
-    Xs_M12 = 3.95e-2
+        Xs_C12 = 5.36e-5
+        Xs_M12 = 3.95e-2
 
-    nXf_C1 = 1.58e-2 # nu times Sigma f, cm⁻¹
-    nXf_C2 = 1.56
+        nXf_C1 = 1.58e-2 # nu times Sigma f, cm⁻¹
+        nXf_C2 = 1.56
 
-    Xa_C1 = 1.22e-2
-    Xa_C2 = 7.82e-1
-    Xa_M1 = 3.39e-4
-    Xa_M2 = 1.41e-2
-else:
-    D_C1 = 9.27e-1
-    D_C2 = 2.85e-1
-    D_M1 = 1.04
-    D_M2 = 1.79e-1
+        Xa_C1 = 1.22e-2
+        Xa_C2 = 7.82e-1
+        Xa_M1 = 3.39e-4
+        Xa_M2 = 1.41e-2
+    else:
+        D_C1 = 9.27e-1
+        D_C2 = 2.85e-1
+        D_M1 = 1.04
+        D_M2 = 1.79e-1
 
-    Xs_C12 = 1.53e05
-    Xs_M12 = 4.07e-2
+        Xs_C12 = 1.53e-5
+        Xs_M12 = 4.07e-2
 
-    nXf_C1 = 1.29e-2
-    nXf_C2 = 1.56
+        nXf_C1 = 1.29e-2
+        nXf_C2 = 1.56
 
-    Xa_C1 = 1.11e-2
-    Xa_C2 = 7.8e-1
-    Xa_M1 = 3.44e-4
-    Xa_M2 = 1.41e-2
+        Xa_C1 = 1.11e-2
+        Xa_C2 = 7.8e-1
+        Xa_M1 = 3.44e-4
+        Xa_M2 = 1.41e-2
+
+
 
 def geom(N, a, b):
     h = (a+b)/N
@@ -215,6 +221,8 @@ def powit_kPhi(M:np.ndarray, F:np.ndarray, h:float, nXf:np.ndarray, debug=False)
 
         if conv_k < eps and conv_phi < eps:
             if debug: print(f"k: {nk} after {i} iterations")
+            rrate = Rf(nphi, nXf, h)
+            nphi /= rrate
             return nk, nphi
         else:
             lk = nk
@@ -229,23 +237,60 @@ def vbar(x, label, c=None, style="dashed"):
     plt.vlines(x, ymin, ymax, label=label, colors=c, linestyles=style)
     plt.ylim(ymin, ymax)
 
-def plot_findiff(N, c=None):
+def calc_kPhi(N):
     h = (a+b)/N
     M, F = fin_diff_mats(N, a, b)
     h, D, Xa, nXf, Xs_12 = geom(N, a, b)
     k, phi = powit_kPhi(M, F, h, nXf)
-    if phi is None: return
+    return k, phi
+
+
+def plot_findiff(N, c=None):
+    h = (a+b)/N
+    k, phi = calc_kPhi(N)
+    if phi is None: return None, None
     nodes = N+1
     x = h*np.array([n for n in range(nodes)])
     plt.plot(x, phi[:nodes], label=f"Fast (N={N})", c=c)
     plt.plot(x, phi[nodes:], label=f"Thermal (N={N})", c=c, linestyle="dashed")
+    return k, phi
 
+# 2e: plots and k values
+k_vals = {
+    10:[],
+    25:[]
+}
+A_VALS = [10, 25]
+N_VALS = [20, 40, 80, 500]
+for a_val in A_VALS:
+    set_params(a_val)
+    i = 1
+    for N in N_VALS:
+        k, phi = plot_findiff(N,c=f"C{i}")
+        k_vals[a_val].append(k)
+        i+=1
+    plot_reference(f"C{i}")
+    vbar(a, f"a = {a} cm", c="C0", style="dotted")
+    plt.xlabel("x (cm)")
+    plt.ylabel("Flux (cm⁻²s⁻¹)")
+    plt.grid(which="both")
+    plt.legend()
+    plt.show()
+print(k_vals)
+# 2e: k values
+print(f"$N$ & " + " & ".join([str(N) for N in N_VALS]) + "\\\\")
+print(f"$a={10}$ & " + " & ".join([str(k) for k in k_vals[10]]) + "\\\\")
+print(f"$a={25}$ & " + " & ".join([str(k) for k in k_vals[25]]) + "\\\\")
 
-i = 1
-for N in [20, 40, 80, 500]:
-    plot_findiff(N,c=f"C{i}")
-    i+=1
-plot_reference(f"C{i}")
+# 2f: 
+set_params(new_a=25)
+MAX_N = 500
+k, phi = calc_kPhi(N=MAX_N)
+h, D, Xa, nXf, Xs_12 = geom(MAX_N, a, b)
+rates = nXf*phi
+# rrate = Rf(phi, nXf , h)
+u = h*np.array([n for n in range(MAX_N+1)])
+plt.plot(u, rates[:MAX_N+1] + rates[MAX_N+1:], label=f"Reaction Rate (N={MAX_N})")
 vbar(a, f"a = {a} cm", c="C0", style="dotted")
 plt.xlabel("x (cm)")
 plt.ylabel("Flux (cm⁻²s⁻¹)")
@@ -254,7 +299,7 @@ plt.legend()
 plt.show()
 
 
-# Legendre expansion
+# 2h: Legendre expansion
 def Pnx(n, x:np.ndarray):
     '''
     Evaluate the n'th Legendre Polynomial over the given values of x.
@@ -262,14 +307,35 @@ def Pnx(n, x:np.ndarray):
     '''
     c = np.zeros(n+1)
     c[n] = 1
-    return np.polynomial.legendre.legval(x, c)
+    return np.array(np.polynomial.legendre.legval(x, c))
 
-x = np.linspace(-1, 1, 100)
-for n in range(50):
-    P = Pnx(n, x)
-    plt.plot(x, P, label=f"L{n}")
+k, phi_fine = calc_kPhi(MAX_N)
+if not phi_fine is None:
+    nodes_big = MAX_N+1
+    u = np.linspace(-1, 1, nodes_big*2)
 
-plt.xlabel("x")
-plt.ylabel("y")
-plt.legend()
-plt.show()
+    num_terms = 50
+    A = np.zeros((nodes_big*2, num_terms))
+    for n in range(num_terms):
+        P = Pnx(n, u)
+        A[:,n] = P
+    # A.T @ A @ x = A.T @ b
+    L = la.inv(A.T @ A) @ A.T @ phi_fine
+
+
+    # print(f"{L}")
+    short_terms = 10
+    print(f" $i$ & " + " & ".join([str(i) for i in range(short_terms)]) + "\\\\")
+    print(f" $C_i$ & " + " & ".join([f"{Ci:.5f}" for Ci in L[:short_terms]]) + "\\\\")
+
+
+    L_eval = np.array(np.polynomial.legendre.Legendre(L)(u))
+
+    x = h*np.linspace(0, a+b, nodes_big)
+    plt.plot(x, L_eval[:nodes_big], label="Fast")
+    plt.plot(x, L_eval[nodes_big:], label="Thermal")
+    plt.xlabel("x (cm)")
+    plt.ylabel("Flux (cm⁻²s⁻¹)")
+    plt.grid(which="both")
+    plt.legend()
+    plt.show()
