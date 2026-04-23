@@ -181,7 +181,7 @@ def Rf(phi: np.ndarray, nXf: np.ndarray, h):
     For given flux and fission cross section find neutron production rate
     Uses trapezoidal integration across x of phi and cross section
     '''
-    Rf = sum([0.5*(phi[i-1]*nXf[i-1]+phi[i]*nXf[i])*h for i in range(1,len(nXf))])
+    Rf = sum([0.5*(phi[i-1]*nXf[i-1] + phi[i]*nXf[i])*h for i in range(0,len(nXf))])
     return Rf
 def trapz(dist: np.ndarray, h):
     return sum([0.5*(dist[i-1]+dist[i])*h for i in range(len(dist))])
@@ -204,6 +204,7 @@ def powit_kPhi(M:np.ndarray, F:np.ndarray, h:float, nXf:np.ndarray, debug=False)
 
     N_ITER = 1000
     iM = la.inv(M)
+    print(nXf)
     for i in range(N_ITER):
 
         nphi = iM @ (F @ lphi) / lk
@@ -287,7 +288,8 @@ set_params(new_a=25)
 MAX_N = 500
 k, phi = calc_kPhi(N=MAX_N)
 h, D, Xa, nXf, Xs_12 = geom(MAX_N, a, b)
-rates = nXf*phi
+nu = 2.4
+rates = nXf*phi / nu
 # rrate = Rf(phi, nXf , h)
 u = h*np.array([n for n in range(MAX_N+1)])
 plt.plot(u, rates[:MAX_N+1] + rates[MAX_N+1:], label=f"Reaction Rate (N={MAX_N})")
@@ -309,33 +311,36 @@ def Pnx(n, x:np.ndarray):
     c[n] = 1
     return np.array(np.polynomial.legendre.legval(x, c))
 
-k, phi_fine = calc_kPhi(MAX_N)
-if not phi_fine is None:
-    nodes_big = MAX_N+1
-    u = np.linspace(-1, 1, nodes_big*2)
-
-    num_terms = 50
-    A = np.zeros((nodes_big*2, num_terms))
-    for n in range(num_terms):
-        P = Pnx(n, u)
-        A[:,n] = P
-    # A.T @ A @ x = A.T @ b
-    L = la.inv(A.T @ A) @ A.T @ phi_fine
-
-
-    # print(f"{L}")
-    short_terms = 10
-    print(f" $i$ & " + " & ".join([str(i) for i in range(short_terms)]) + "\\\\")
-    print(f" $C_i$ & " + " & ".join([f"{Ci:.5f}" for Ci in L[:short_terms]]) + "\\\\")
+for a_val in [10, 25]:
+    set_params(a_val)
+    k, phi_fine = calc_kPhi(MAX_N)
+    if not phi_fine is None:
+        nodes_big = MAX_N+1
+        u = np.linspace(-1, 1, nodes_big*2)
+        
+        num_terms = 50
+        A = np.zeros((nodes_big*2, num_terms))
+        for n in range(num_terms):
+            P = Pnx(n, u)
+            A[:,n] = P
+        # A.T @ A @ x = A.T @ b
+        L = la.inv(A.T @ A) @ A.T @ phi_fine
 
 
-    L_eval = np.array(np.polynomial.legendre.Legendre(L)(u))
+        # print(f"{L}")
+        short_terms = 10
+        print(f" $i$ & " + " & ".join([str(i) for i in range(short_terms)]) + "\\\\")
+        print(f" $C_i$ & " + " & ".join([f"{Ci:.5f}" for Ci in L[:short_terms]]) + "\\\\")
 
-    x = h*np.linspace(0, a+b, nodes_big)
-    plt.plot(x, L_eval[:nodes_big], label="Fast")
-    plt.plot(x, L_eval[nodes_big:], label="Thermal")
-    plt.xlabel("x (cm)")
-    plt.ylabel("Flux (cm⁻²s⁻¹)")
-    plt.grid(which="both")
-    plt.legend()
-    plt.show()
+
+        L_eval = np.array(np.polynomial.legendre.Legendre(L)(u))
+
+        x = np.linspace(0, a+b, nodes_big)
+        plt.plot(x, L_eval[:nodes_big], label="Fast")
+        plt.plot(x, L_eval[nodes_big:], label="Thermal")
+        vbar(a, f"a = {a} cm", c="C2")
+        plt.xlabel("x (cm)")
+        plt.ylabel("Flux (cm⁻²s⁻¹)")
+        plt.grid(which="both")
+        plt.legend()
+        plt.show()

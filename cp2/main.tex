@@ -13,6 +13,9 @@
 \usepackage{multicol} % Package for helpful table formatting
 \usepackage{multirow} % Package for helpful table formatting
 
+%Floating management
+\usepackage{placeins} % FloatBarrier
+
 %Math
 \usepackage{amsmath} % Package provides useful math environments
 \usepackage{amssymb} % Package provides more symbols than base LaTeX
@@ -95,12 +98,7 @@ Neutron transport (a.k.a. neutronics), or the study of neutron behavior in mater
 
 % For example, the general neutron diffusion equation is an equation. It is useful for modeling neutron diffusion. It comes from a derivation. That derivation is not required, but you should discuss the process undertaken to obtain the equation (0th and 1st Moment\dots). The general neutron diffusion equation is presented in Equation \ref{eq:generalneutrondiffusion}. For a complete list of symbols available for use in a math environment, please reference \href{https://www.cmor-faculty.rice.edu/~heinken/latex/symbols.pdf}{this} page. There are a great deal of mathematical features provided by the amsmath package. For complete documentation, please reference \href{https://www.latex-project.org/help/documentation/amsldoc.pdf}{this} page. As a reminder, \textit{all} equations should be numbered to the right.
 
-\newcommand{\pd}[3]{\frac{\partial^{#3}#1}{\partial{#2}^{#3}}}
-% %This makes a new command '\pd' that takes in three arguments. The first is what your applying the derivative to, the second is the independent variable, and the third is the order. An example usage is \pd{T}{x}{}, which will result in dT/dx or \pd{T}{x}{2} which will result in d^2T/dx^2
-\begin{equation}
-    \frac{1}{v}\pd{\phi}{t}{} - \nabla\cdot D \nabla\phi + \Sigma_a\phi = \Sigma_s\phi + \nu\Sigma_f\phi+S
-    \label{eq:generalneutrondiffusion}
-\end{equation}
+
 
 % Another important thing in all projects is references. There are two powerful citation packages: BibTeX and BibLaTeX. They are similair in their respective end results, however BibLaTeX typically requires less user effort, and is actively maintained and developed --- unlike BibTex.To use either, make a refs.bib file, and insert all of your citations there. Then, to cite a reference, simply use the command \verb|\cite{}|. For example, If I wanted to cite NPRE 455 lecture notes \cite{LectureNotes}. What about page numbers? Simply add the page number (or range) you want to the cite command: \verb|\cite[page]{reference}|, \cite[5-10]{LectureNotes}. All citations, as soon as they are used, will automatically be added to your bibliography! To see how to construct the bibliography, go to the References section, Section \ref{sec:References}.
 
@@ -109,9 +107,9 @@ Neutron transport (a.k.a. neutronics), or the study of neutron behavior in mater
 \clearpage %clearpage and newpage are similair, use clearpage at the end of sections, and newpage inside of sections.
 
 \section{Question 1}\label{sec:q1}
+\FloatBarrier
 
-
-\defplot{p1_setup}{A reactor consisting of three $yz$-infinite slabs (effectively two slabs, with symmetry at $x=0$), where the inner slab $0\leq x \leq a$ is composed of a fuel region $C$ and a moderator region $M$.\cite{novak_computer_2026}}
+\defplot{p1_setup}{A device consisting of three $yz$-infinite slabs (effectively two slabs, with symmetry at $x=0$), composed on $0\leq x \leq a$ of a core region $C$ with distributed source $S$ and on $a < x \leq a+b$ of a moderator region $M$\cite{novak_computer_2026}.}
 
 \begin{table}[htb!]
 \caption{Two-slab problem parameters.\cite{novak_computer_2026}}
@@ -128,6 +126,81 @@ $\Sigma_{s,1\rightarrow2}$ (1/cm) & 0.001 & --- && 0.2 & ---\\
 \bottomrule
 \end{tabular}
 \end{table}
+
+Consider the two-material infinite slab reactor of \figref{p1_setup}, in which a slab with a distributed source is surrounded symmetrically by two moderating slabs.
+We aim to predict the neutron flux in this reactor, both spatially and at different energies, using multigroup theory and both analytical and numerical solutions.
+\subsection{Theory}
+In order to predict the neutron flux in the slabs, one could make use of the neutron diffusion model in Eq.~\ref{eq:generalneutrondiffusion}.
+This model has been previously derived; it assumes linear anisotropy of neutron flux, isotropic neutron scattering, and ignores the distribution of neutrons in angle and energy (we additionally ignore delayed neutrons from fission, but this is for simplicity, as opposed to a drastic simplification of the model).
+\newcommand{\pd}[3]{\frac{\partial^{#3}#1}{\partial{#2}^{#3}}}
+% %This makes a new command '\pd' that takes in three arguments. The first is what you're applying the derivative to, the second is the independent variable, and the third is the order. An example usage is \pd{T}{x}{}, which will result in dT/dx or \pd{T}{x}{2} which will result in d^2T/dx^2
+\begin{equation}
+    \frac{1}{v}\pd{\phi}{t}{} - \nabla\cdot D \nabla\phi + \Sigma_a\phi = 
+    % \Sigma_s\phi + 
+    \nu\Sigma_f\phi+S
+    \label{eq:generalneutrondiffusion}
+\end{equation}
+However, in this report we seek to include information about the energies of neutrons.
+The distribution of material properties, and subsequently of neutron flux, vary too wildly with energy to reasonably integrate into this model as a continuous energy process (as opposed to Monte Carlo methods, where calculations for a single neutron could feasibly sample near-continuous property information).
+Rather, a typical approach involves \emph{multigroup theory}, in which neutrons are categorized into some finite $G$ groups of energy, finely enough that within each group $g$ properties are self-consistent:
+\begin{equation}
+    \frac{1}{v}\pd{\phi_g}{t}{} - \nabla\cdot D_g\nabla\phi_g + \Sigma_{ag}\phi_g + \sum_{g'\neq g}^{G}\Sigma_{sg\rightarrow g'}\phi_g=\sum_{g'\neq g}^{G}\Sigma_{sg'\rightarrow g}\phi_{g'} + \nu\Sigma_{fg}\phi_g + S_g
+    \label{eq:multigroup-diff}
+\end{equation}
+\newcommand{\outscat}{\Sigma_{sg\rightarrow g'}}
+\newcommand{\inscat}{\Sigma_{sg'\rightarrow g}}
+where the ``outscattering'' cross-section $\outscat$ represents the macroscopic cross-section for neutrons in energy group $g$ to scatter into an energy of group $g'$, and the ``inscattering'' cross-section $\inscat$ vice versa, from $g'$ to $g$.
+These groups are typically numbered starting from the fastest group $g=1$ to the slowest energy group $g=G$.\\
+\newcommand{\SigRem}{\Sigma_{Rg}}
+
+The absorption $\Sigma_{ag}$ and outscattering cross-sections both apply to the same group's flux $\phi_g$, and are often combined into one ``removal'' cross-section $\SigRem$:\\
+\begin{equation}
+    \SigRem = \Sigma_{ag} + \sum_{g'\neq g}^{G}
+    \label{eq:removal}
+\end{equation}
+
+To select groups of energy across with properties are \emph{similar} would still require an impractical number of groups, and so such groups are defined such that they are \emph{self-consistent}:
+\begin{equation}
+    \Sigma_g\phi_g = \int_{E_g}^{E_{g+1}}\Sigma(E)\phi(E)dE
+    \label{eq:consistent-gxs}
+\end{equation}
+Thus, knowing the energy spectrum of a comparable existing system, one could define properties for energy groups by integrating over that section:
+\begin{equation}
+    \Sigma_g=\frac{\int_{E_g}^{E_{g+1}}\Sigma(E)\phi(E)dE}{\int_{E_g}^{E_{g+1}}\phi(E)dE}
+\end{equation}
+This yields, as seen in Eq.~\ref{eq:multigroup-diff} a diffusion equation for each group which can be solved with two boundary conditions, as for the single group model.
+However, since inscattering depends on every other energy's flux distribution, the flux distributions $\phi_g$ depend on all other distributions $\phi_{g'}$, producing tightly coupled diffusion equations with a very involved solution process.
+Instead, an assumption is often made that there is no ``upscattering'', that is, neutrons never scatter from a slower group to a faster group $g\rightarrow g',g>g'$.
+Since neutrons are typically far higher energy than those of atomic nuclei, this assumption is fairly viable unless dealing with multiple groups at such low, ``thermal'' energies that the thermal energy of atomic nuclei is comparable.
+This makes the fastest flux distribution $\phi_1$ independent of the rest, allowing it to be solved first using typical boundary conditions.
+The next flux distribution $\phi_2$, then, only depending on the single higher energy group $\phi_1$, can then use the $\phi_1$ solution and be solved itself, and so on and so forth until either the slowest group or reaching multiple thermal groups.
+\subsection{Analytical Solution}
+Consider, for example, the previously discussed system in \figref{p1_setup}.
+Let us perform a multigroup diffusion analysis with two energy groups, and assume no upscattering from 2 to 1.
+This yields two flux distributions to solve for using diffusion theory:
+\begin{equation}
+    \begin{aligned}
+        - \nabla\cdot D_1\nabla\phi_1 + (\Sigma_{a1}+\Sigma_{s1\rightarrow 2})\phi_1= \nu\Sigma_{f1}\phi_1 + S_1\\
+        - \nabla\cdot D_2\nabla\phi_2 + \Sigma_{a2}\phi_2= \nu\Sigma_{f2}\phi_2 + S_2\\
+    \label{eq:multigroup-diff-nospace}
+    \end{aligned}
+\end{equation}
+Considering the one-dimensional, two-region problem, for which the source $S$ is only relevant to the fast group $g=1$ in region $C$, converts this to a set of four distributions (which we refactor using removal cross-sections and diffusion length $L_g^2=\frac{D_g}{\SigRem}$):
+\begin{align}
+    \pd{\phi_{C1}}{x}{2} - \frac{1}{L_{C1}^2}\phi_{C1} &= -\frac{S_{C1}}{D_{C1}}\label{eq:c1_flux}\\
+    \pd{\phi_{C2}}{x}{2} - \frac{1}{L_{C2}^2}\phi_{C2} &= -\Sigma_{sC1\rightarrow2}\phi_{C1}\label{eq:c2_flux}\\
+    \pd{\phi_{M1}}{x}{2} - \frac{1}{L_{M1}^2}\phi_{M1} &= 0 \label{eq:m1_flux}\\
+    \pd{\phi_{M2}}{x}{2} - \frac{1}{L_{M2}^2}\phi_{M2} &= -\Sigma_{sM1\rightarrow2}\phi_{M1}\label{eq:m2_flux}
+\end{align}
+
+As anticipated from earlier discussion, Eqs.~\ref{eq:c1_flux} and \ref{eq:m1_flux} are independent of other distributions, and can be solved first.
+The flux $\phi_{C1}$ (core region $C$, fast group 1), with distributed source $S$, can be broken into homogenous and partial solutions:
+\begin{equation}
+    \begin{gathered}
+        \phi_{C1}=\phi_h + \phi_p\\
+        \pd{\phi_h}{x}{2} - \frac{1}{L_{C2}^2}\phi = -\frac{S}{D_{C2}}
+    \end{gathered}
+\end{equation}
 
 \section{Question 1}\label{sec:question1}
 
