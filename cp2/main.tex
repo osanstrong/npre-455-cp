@@ -366,6 +366,7 @@ By combining both flux distributions $\phi_{1,i}$ and $\phi_{2,i}$ (each with $N
     \label{eq:p1_mat}
 \end{landscape}
 We implement a \texttt{Python} script to construct and solve the matrix equation seen in Eq.~\ref{eq:p1_mat}, through simple inversion ($\phi=A^{-1}b$), for the given system with two groups and two regions.
+\subsection{Results}
 
 \FloatBarrier
 \section{Question 2}
@@ -409,10 +410,156 @@ However, for the $C$ region equations of Eq.~\ref{eq:fission-twogroup}, this pro
 The specific algebraic techniques used to solve these tightly coupled differential equations are beyond the scope of this report, and examples may be found elsewhere.\cite{novak_lecture21_2026}\\
 \subsection{Numerical Solution}
 Instead, these governing equations will be used to construct a finite-difference solution from the start.
-We approximate the streaming term similarly as to the non-multiplying systems in Eq.~\ref{eq:conserv-stream}, yielding similar governing finite-difference equations for body nodes $i\in{1,2,\dots,N-1}$ and $i\in{N+2,N+3,\dots,2N}$:
+We approximate the streaming term similarly as to the non-multiplying systems in Eq.~\ref{eq:conserv-stream}, yielding similar governing finite-difference equations for body nodes:
+\begin{equation}
+    \begin{aligned}
+        -d_L\phi_{1,i-1} + \left(d_L+d_R+\Sigma_{R1,i}\right)\phi_{1,i} - d_R\phi_{1,i+1} &= \frac{1}{k} \left(\nu\Sigma_{f1,i}\phi_{1,i}+\nu\Sigma_{f2,i}\phi_{2,i}\right)\\
+        -d_L\phi_{2,i-1} + \left(d_L+d_R+\Sigma_{a2,i}\right)\phi_{2i} - d_R\phi_{2,i+1} - \Sigma_{s1\rightarrow2,i}\phi_{1,i} &= 0
+    \end{aligned}
+\end{equation}
+As with the non-multiplying system, we then combine these equations into one flux distribution $\phi$ with $2N+2$ notes such that each value $X\in\phi, \Sigma, \dots$ becomes $X_{1,i}\rightarrow X_i$ for group 1, and $X_{2,i}\rightarrow X_{i+(N+1)}$ for group 2.
+For the boundaries at $0, N, N+1, 2N+1$, as the boundaries remain symmetric on the left and vacuum on the right, we apply the same boundary conditions as in Eqs.~\ref{eq:sym-findiff} and \ref{eq:vac-findiff}.\\
 
+However, unlike with the non-multiplying system, there are no independent sources to put into a constant matrix $b$, $A\phi=b$.
+Instead, since we are solving for a multiplying system, we formulate a migration matrix $M$, and a fision matrix $F$ which contains the fission production terms all scaled by $\frac{1}{k}$ to form an equation $M\phi=\frac{1}{k}F\phi$, as seen in Eq.~\ref{eq:p2_mat}:
 
-Eqs.~\ref{eq:sym-findiff} and \ref{eq:vac-findiff}, yielding the same 
+\newcommand{\fprod}[1]{\nu\Sigma_{f#1}}
+\begin{landscape}
+    \small
+    \begin{equation}
+        \begin{aligned}
+    \begin{bmatrix}
+        -3 & 4 & -1 & & &   &&&&  \\
+        -\dL{1} & \dLR{1}+\Sigma_{R,1} & -\dR{1} && &&&&\\
+        & -\dL{2} & \dLR{2}+\Sigma_{R,2} & -\dR{2} & &&&&\\
+        &&\ddots& \ddots & \ddots &&&&\\
+        &&-\dL{N-1} & \dLR{N-1}+\Sigma_{R,N-1} & -\dR{N-1} &&&&\\
+        &&&&1 &&&&\\
+        0&&&& -3 & 4 & -1 & & &     \\
+        &-\downscat{1}&&&&   -\dL{1+(N+1)} & \dLR{1+(N+1)}+\Sigma_{R,1+(N+1)} & -\dR{1+(N+1)} &&\\
+        &&-\downscat{2}&&&&   -\dL{2+(N+1)} & \dLR{2+(N+1)}+\Sigma_{R,2+(N+1)} & -\dR{2+(N+1)} &\\
+        &&\ddots& \ddots & \ddots &&\ddots& \ddots & \ddots\\
+        && & -\downscat{2N} & &&-\dL{2N} & \dLR{2N}+\Sigma_{R,2N} & -\dR{2N}\\
+        &&&&0 &&&&1 \\
+    \end{bmatrix}&\\
+    A&\\
+    \times\begin{bmatrix}
+        \phi_0\\\phi_1\\\phi_2\\\vdots\\\phi_{2N}\\\phi_{2N+1}
+    \end{bmatrix}&\\
+    \times \phi&\\
+    =
+    \frac{1}{k}
+    \begin{bmatrix}
+        0 &&&&         & 0&&&&         \\
+        &\fprod{1}&&&  & &\fprod{N+2}&&&\\
+        &&\fprod{2}&&  & &&\fprod{N+3}&&\\
+        &&\ddots   &&  & &&\ddots     &&\\
+        &&&\fprod{2N}& & &&&\fprod{2N} &\\
+        &&&&0          & &&&&0          \\
+        &&&&           & 0&&&&          \\
+        &&&&           & &0&&&     \\
+        &&&&           & &&0&&     \\
+        &&&&           & &&\ddots&&     \\
+        &&&&           & &&&0&     \\
+        &&&&           & &&&&0     \\
+    \end{bmatrix}\begin{bmatrix}
+        \phi_0\\\phi_1\\\phi_2\\\vdots\\\phi_{2N}\\\phi_{2N+1}
+    \end{bmatrix}& \\
+    =\frac{1}{k}F\phi&\\
+        \end{aligned}
+    \end{equation}
+    \label{eq:p2_mat}
+\end{landscape}
+
+This equation, as with an analogous finite-difference model for single-group analysis\cite{strong_npre_2026}, forms an eigenvector system, as it is true for any (eigenvector) distribution, or mode, of flux $\phi$ (across both groups) which is scaled every generation by an (eigenvalue) multiplication rate $k$, and the dominant (largest) value of $k$ and corresponding distribution may be solved for by manipulating the relationship to return a new $\phi_{n+1}$ using a previous guess of $k_n$ and $\phi_n$ (where $n$ represents the index of power iteration):
+\begin{equation}
+    \label{eq:pow-iter}
+    \begin{gathered}
+        M\phi = \frac{1}{k}F\phi \\
+        \phi = M^{-1}\left(\frac{1}{k}F\phi\right)\\
+        \phi_{n+1} = M^{-1}\left(\frac{1}{k_n}F\phi_n\right)\\
+        k_{n+1} = \frac{\sum_{i=0}^{2N+1}(\nu\Sigma_{f}\phi)_i}{\sum_{i=0}^{2N+1}(\Sigma_{a}\phi)_i}
+    \end{gathered}
+\end{equation}
+where the integral evaluations for $k_{n+1}$ are carried out using a numerical integral process such as a trapezoidal Reimann sum, over the full vector $\phi$ which corresponds to the flux across all nodes in both energy groups.
+To maintain consistent scales of $\phi$, after every iteration the distribution is then normalized using a similar integral evaluation of neutron production, to normalize production to 1:
+\begin{gather}
+    P=\sum_{i=0}^{2N+1}(\nu\Sigma_{f}\phi)_i\\
+    \phi = \frac{\phi}{P}
+\end{gather}     
+
+We implement a \texttt{Python} script which, starting from a reasonable initial guess of $k$ and $\phi$, repeats this power iteration process until reaching sufficient convergence criteria:
+\begin{equation}
+    \label{eq:convergence}
+    \begin{gathered}
+        \frac{||\phi_{n+1}-\phi_{n}||_2}{||\phi_n||_2} \leq 10^{-6}\\
+        \frac{(k_{n+1}-k_n)^2}{(k_n)^2}\leq 10^{-6}
+    \end{gathered}
+\end{equation}
+\subsection{Results}
+\FloatBarrier
+We use the previously described script to solve for flux distributions across both geometries and corresponding properties given in \figref{p2_setup}, for four different values of $N\in{20, 40, 80, 500}$, and compare to solutions obtained elsewhere for this problem using transport theory\cite{novak_computer_2026}.
+The flux distributions may be compared in \figref{fig:p2_fluxes}, and the $k$-values obtained compared in Table~\ref{tab:k_vals}.
+In all fluxes, we observe the boundary conditions at $x=0$, where sourceless symmetry dictates the slope be zero, and at the vacuum boundary $x=a+b$, where the flux value is zero.
+We also observe the strongest flux in the center near $x=0$ for fast neutrons, while thermal neutrons spike in the moderator adjacent to the material boundary $x=a$.
+
+\begin{figure}
+    \centering
+    \defsubplot{p2_a10}{For $a=10$~cm.}
+    \hfill
+    \defsubplot{p2_a25}{For $a=25$~cm.}
+    \caption{The dominant flux distributions obtained using a finite difference solution with $N\in{20, 40, 80, 500}$ cells, compared to a separate, transport theory-derived solution, for two infinite slab geometries.}
+    \label{fig:p2_fluxes}
+\end{figure}
+
+\begin{table}
+    \centering
+    \caption{The multiplication rates $k$ obtained through finite-difference solutions with $N\in{20, 40, 80, 500}$ cells.}
+    \label{tab:k_vals}
+    \begin{tabular}{c|cccc}
+        \hline
+        $N$ & 20 & 40 & 80 & 500\\
+        \midrule
+        $a=10$ & 0.92157 & 0.94557 & 0.96968 & 0.97506\\
+        $a=25$ & 0.99828 & 1.02133 & 1.02750 & 1.03259\\
+        \hline
+        
+    \end{tabular}
+\end{table}
+\FloatBarrier
+The total (i.e across both energies) fission reaction rate at every point in space, for $a=25~\mathrm{cm}, b=25~\mathrm{cm},N=500$, may be observed in \figref{p2_rrate}.
+In this plot, we observe that the majority of fission takes place in the core region adjacent to the moderator, where thermal neutrons (which have a high fission cross section, but are primarily formed in the moderator) enter the core region and are able to initiate fission.
+There is contribution towards the center near $x=0$, from the fast neutrons, but this is minimal compared to the spike adjacent to the moderator.
+If we were to use a one-speed model, we would not observe this phenomenon, often referred to as spatial self-shielding, and would instead observe a steady hump in reactions towards the center $x=0$ in the core, as the rate would only depend on where the highest total neutron flux is found, not where the thermal flux is specifically maximized in and near the moderator.
+In our two-speed model, by contrast, we observe two distinct peaks in flux (\figref{fig:p2_fluxes}), one for fast flux in the core where fast neutrons are born through fission, and one for thermal flux in the moderator where thermal neutrons are born through downscattering.
+This has a spatially self-shielding effect, where fast neutrons are born in the core, diffuse to the moderator, downscatter to thermal neutrons, and then reenter the core region, maximizing fission reaction rates in the core near the boundary where thermal neutrons (which much more readily trigger fission) enter from the moderator.
+\\
+\defplot{p2_rrate}{The total fission reaction rate at every point in space for $a=25~\mathrm{cm}, b=25~\mathrm{cm},N=500$.}
+
+\FloatBarrier
+
+The solutions obtained using the finite-difference method may be in turn approximated using the infinite series of Legendre polynomials $L_i$:
+\begin{equation}
+    \phi(x(\mu))=\sum_{i=0}^{m}C_iL_i(x)
+\end{equation}
+where $\mu$ is a rescaled spatial variable ranging from 0 at $x=0$ to 1 at $x=a+b$, as Legendre polynomials take input on the domain $0<x<1$.
+By evaluating some order $m$ of polynomials at each of the rescaled nodes of a numerical solution, and overfitting the numeric solution as a linear combination of each of the polynomials (in a matrix $A$), we can solve for a least-squares fit vector $\vec{L}$ of polynomial coefficients $L_i$:
+\begin{equation}
+    \begin{gathered}
+        A\vec{L}=\vec{\phi}\\
+        \vec{L}=\left(A^TA\right)^{-1}A^T\vec{\phi}
+    \end{gathered}
+    \label{eq:leg-find}
+\end{equation}
+Using Eq.~\ref{eq:leg-find}, we solve for an order $m=50$ approximation two the two-energy flux solution using $N=500$ each for both geometries, and plot these approximations in \figref{fig:p2_legfit}
+\begin{figure}
+    \defsubplot{p2_leg_a10}{For $a=10$~cm.}
+    \hfill
+    \defsubplot{p2_leg_a25}{For $a=25$~cm.}
+    \caption{Legendre polynomial expansion with order 50 of the two-group flux vector found using $N=500$, for each geometry.}
+    \label{fig:p2_legfit}
+\end{figure}
+\FloatBarrier
 \section{Question 1}\label{sec:question1}
 
 After your Introduction, you should have one section for each of the problems in this assignment. For example, for CP-1 there should be 3 sections. Each of these question sections should have an introduction to the problem, and then subsequent subsections for necessary theory/ derivations and for results. In each problem introduction, you should explicitly describe the problem being solved, the significance, and present the problem's geometry and properties. As a reminder, figure captions should be centered below the figure, and table captions should be centered above the table. To reference tables, figures, and equations in text you use the following command: \verb|\ref{label}|. For example, if I want to reference the image with the caption 'This image is super awesome', I would say \ref{fig:awesomefigure}. To tell \LaTeX where to put the image, you have a few options. You will notice in the command \verb|\begin{figure}[]| there is a set of brackets. This is how you tell \LaTeX where to put the image. There are three relevant commands: h for here, t for top, and b for bottom. All of these commands tell latex to put it in a convenient spot close to where you want. If you really want a figure somewhere and the compiler is refusing to put it there, you would add an exclamation point before the letter (!h). This tells the compiler to stop messing around and to put it where you want.

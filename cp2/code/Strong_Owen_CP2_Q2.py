@@ -35,7 +35,7 @@ def plot_2550():
 a = 25 #cm
 b = 50 # cm
 
-def plot_reference(c=None):
+def plot_reference(ax1, ax2, c=None):
     if a == 10:
         paths = ["fast_flux_a10.csv", "thermal_flux_a10.csv"]
     else:
@@ -43,8 +43,8 @@ def plot_reference(c=None):
     
     xf, ff = get_flux(paths[0])
     xt, ft = get_flux(paths[1])
-    plt.plot(xf, ff, label="Fast (reference)", c=c)
-    plt.plot(xt, ft, label="Thermal (reference)", c=c, linestyle="dashed")
+    ax1.plot(xf, ff, label="Fast (reference)", c=c)
+    ax2.plot(xt, ft, label="Thermal (reference)", c=c, linestyle="dashed")
 
 def set_params(new_a):
     global a
@@ -246,14 +246,14 @@ def calc_kPhi(N):
     return k, phi
 
 
-def plot_findiff(N, c=None):
+def plot_findiff(N, ax1, ax2, c=None):
     h = (a+b)/N
     k, phi = calc_kPhi(N)
     if phi is None: return None, None
     nodes = N+1
     x = h*np.array([n for n in range(nodes)])
-    plt.plot(x, phi[:nodes], label=f"Fast (N={N})", c=c)
-    plt.plot(x, phi[nodes:], label=f"Thermal (N={N})", c=c, linestyle="dashed")
+    ax1.plot(x, phi[:nodes], label=f"Fast (N={N})", c=c)
+    ax2.plot(x, phi[nodes:], label=f"Thermal (N={N})", c=c, linestyle="dashed")
     return k, phi
 
 # 2e: plots and k values
@@ -266,22 +266,30 @@ N_VALS = [20, 40, 80, 500]
 for a_val in A_VALS:
     set_params(a_val)
     i = 1
+    fig, ax1 = plt.subplots()
+    ax1.set_xlabel("x (cm)")
+    ax1.set_ylabel("Flux (cm⁻²s⁻¹)")
+    ax2 = plt.twinx(ax1)
+    ax2.set_ylabel("Flux (cm⁻²s⁻¹)")
     for N in N_VALS:
-        k, phi = plot_findiff(N,c=f"C{i}")
+        k, phi = plot_findiff(N, ax1, ax2,c=f"C{i}")
         k_vals[a_val].append(k)
         i+=1
-    plot_reference(f"C{i}")
+    plot_reference(ax1, ax2, f"C{i}")
     vbar(a, f"a = {a} cm", c="C0", style="dotted")
-    plt.xlabel("x (cm)")
-    plt.ylabel("Flux (cm⁻²s⁻¹)")
     plt.grid(which="both")
-    plt.legend()
+    ax1.grid(True)
+    ax2.grid(True)
+    ax1.set_axisbelow(True)
+    ax2.set_axisbelow(True)
+    ax1.legend(loc=5)
+    ax2.legend(loc=0)
     plt.show()
 print(k_vals)
 # 2e: k values
 print(f"$N$ & " + " & ".join([str(N) for N in N_VALS]) + "\\\\")
-print(f"$a={10}$ & " + " & ".join([str(k) for k in k_vals[10]]) + "\\\\")
-print(f"$a={25}$ & " + " & ".join([str(k) for k in k_vals[25]]) + "\\\\")
+print(f"$a={10}$ & " + " & ".join([f"{k:.5f}" for k in k_vals[10]]) + "\\\\")
+print(f"$a={25}$ & " + " & ".join([f"{k:.5f}" for k in k_vals[25]]) + "\\\\")
 
 # 2f: 
 set_params(new_a=25)
