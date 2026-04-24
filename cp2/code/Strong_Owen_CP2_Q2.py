@@ -268,9 +268,9 @@ for a_val in A_VALS:
     i = 1
     fig, ax1 = plt.subplots()
     ax1.set_xlabel("x (cm)")
-    ax1.set_ylabel("Flux (cm⁻²s⁻¹)")
+    ax1.set_ylabel("Fast Flux (cm⁻²s⁻¹)")
     ax2 = plt.twinx(ax1)
-    ax2.set_ylabel("Flux (cm⁻²s⁻¹)")
+    ax2.set_ylabel("Thermal Flux (cm⁻²s⁻¹)")
     for N in N_VALS:
         k, phi = plot_findiff(N, ax1, ax2,c=f"C{i}")
         k_vals[a_val].append(k)
@@ -326,7 +326,9 @@ for a_val in [10, 25]:
         nodes_big = MAX_N+1
         u = np.linspace(-1, 1, nodes_big*2)
         
+        # NOTE: The manual asked for 50 nodes, but it is possible one might desire 50 nodes *per group*, in which case 100 nodes would be appropriate.
         num_terms = 50
+        # num_terms = 100
         A = np.zeros((nodes_big*2, num_terms))
         for n in range(num_terms):
             P = Pnx(n, u)
@@ -334,11 +336,9 @@ for a_val in [10, 25]:
         # A.T @ A @ x = A.T @ b
         L = la.inv(A.T @ A) @ A.T @ phi_fine
 
-
-        # print(f"{L}")
         short_terms = 10
         print(f" $i$ & " + " & ".join([str(i) for i in range(short_terms)]) + "\\\\")
-        print(f" $C_i$ & " + " & ".join([f"{Ci:.5f}" for Ci in L[:short_terms]]) + "\\\\")
+        print(f" $C_i$ & " + " & ".join([f"{Ci:.3f}" for Ci in L[:short_terms]]) + "\\\\")
 
 
         L_eval = np.array(np.polynomial.legendre.Legendre(L)(u))

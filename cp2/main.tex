@@ -53,6 +53,7 @@
 }
 \newcommand{\defsubplot}[2]{\defsubplotW{#1}{#2}{0.45}}
 
+\newcommand{\bigO}{\mathcal{O}}
 
 
 
@@ -87,12 +88,25 @@
 \pagenumbering{arabic}
 
 \begin{abstract}
-    GLEEBLE
+    Characterizing neutron behavior in materials is a necessary step in building every nuclear device, and depends on heavily and complexly energy dependent phenomena.
+    In this report, we investigate multigroup theory to integrate energy dependence into the neutron diffusion model, using analytic and finite-difference numerical solutions to two-group diffusion models of multiplying and non-multiplying systems.
+    We formulate finite-difference solutions of varying mesh fineness to a non-multiplying system and compare to an analytic solution, then formulate finite-difference solutions of varying mesh fineness to two multiplying systems and compare to a transport-derived solution.
+    We observe finite-difference solutions to the non-multiplying system which converge to the analytic solution with order $\bigO(h^n)$, and finite-difference solutions to the multiplying systems which loosely appear to converge with increasing cell count $N$.
+    We additionally observe the effect of spatial self-shielding through energy-dependent distributions and the fission reaction rates found, and successfully fit Legendre polynomial series of order $m=50$ to the multiplying flux solution vectors.
+    These results confirm the effectiveness of finite-difference diffusion neutronics solutions using multigroup theory to incorporate energy dependence, highlight the importance of energy-dependent modeling through phenomena like spatial self-shielding, and may be of use to those wishing to model nuclear systems using finite-difference methods, diffusion theory, and multigroup theory.
 \end{abstract}
 
 \section{Introduction}\label{sec:introduction}
 
-Neutron transport (a.k.a. neutronics), or the study of neutron behavior in materials, is a critical field of study in nuclear engineering, studied in the design of every nuclear reactor.
+Neutron transport (a.k.a. neutronics), or the study of neutron behavior in materials, is a critical field of study in nuclear engineering, studied in the design of every nuclear reactor.\\
+
+While several approaches are available to characterize this neutron behavior, a common starting basis is Neutron Diffusion, derived from the Neutron Transport Equation.
+In all of these methods, neutron behavior depends heavily on energy, in ways not easy to characterize through continuous equations.
+Thus, in diffusion study of neutron transport, it is typical to apply multigroup theory, grouping neutrons into discrete ranges of energy and evaluating the diffusion equation for each.\\
+
+In this report, we aim to demonstrate multigroup theory for multiplying and non-multiplying systems, by formulating finite-difference numerical solutions to two-group diffusion models of multiple infinite-slab reactor configurations.
+For a non-multiplying system, we seek to characterize flux distributions resulting from a distributed fast source and solution fidelity over a range of mesh finenesses, comparing to an analytically derived solution.
+For two multiplying systems, we seek to characterize dominant flux modes and multiplication rates $k$ over meshes of varying fineness.
 
 % Lets begin with how to set-up a \LaTeX\, project! One of the cool things about \LaTeX is that you do not need a specific text editor to create or edit documents. However, the easiest way to learn \LaTeX\, is using a tool like \href{https://www.overleaf.com}{Overleaf}. Overleaf requires no experience to begin using as it is created with beginners in mind, and has loads of helpful tutorials. Also, you have a 'pro' account funded by UIUC, and so you can make collaborative projects (like google drive). To take advantage of this account, go to the \href{https://www.overleaf.com/register}{Overleaf register page}, select 'Log in with SSO' and follow the prompts. To begin a blank project, Overleaf has a helpful page \href{https://www.overleaf.com/learn/how-to/Creating_a_document_in_Overleaf}{here}. To use this template, with some of the required formatting done for you, please refer to Overleaf's helpful tutorial on uploading existing projects \href{https://www.overleaf.com/learn/how-to/Uploading_a_project}{here}.
 
@@ -176,7 +190,12 @@ However, since inscattering depends on every other energy's flux distribution, t
 Instead, an assumption is often made that there is no ``upscattering'', that is, neutrons never scatter from a slower group to a faster group $g\rightarrow g',g>g'$.
 Since neutrons are typically far higher energy than those of atomic nuclei, this assumption is fairly viable unless dealing with multiple groups at such low, ``thermal'' energies that the thermal energy of atomic nuclei is comparable.
 This makes the fastest flux distribution $\phi_1$ independent of the rest, allowing it to be solved first using typical boundary conditions.
-The next flux distribution $\phi_2$, then, only depending on the single higher energy group $\phi_1$, can then use the $\phi_1$ solution and be solved itself, and so on and so forth until either the slowest group or reaching multiple thermal groups.
+The next flux distribution $\phi_2$, then, only depending on the single higher energy group $\phi_1$, can then use the $\phi_1$ solution and be solved itself, and so on and so forth until either the slowest group or reaching multiple thermal groups.\\
+
+Taking a step back, we reiterate the importance of accounting for energy dependence of neutrons: neutrons are born at high energies (which depends on material fission properties), are gradually either scattered to lower energies or absorbed (which both depend on different material properties at every energy), and in certain materials can trigger fission (which depend on material properties across energy, typically more likely at low energy).
+This tightly bound dependence between material and energy dependent properties manifests in very distinct reactor effects such as ``spatial self-shielding'', in where combinations of regions with different properties allow drastically different behavior than if the reactor was one uniform material with perfectly averaged properties.
+In a typical thermal reactor, for example, there is fuel where thermal neutrons readily initiate fission, and low-z moderator where those fast neutrons, escaping the fuel they were produced in, then quickly downscatter to lower energies until scattering back into the fuel at low enough energy to then initiate new fusion reactions.
+If one were to analyze neutron behavior in a reactor assuming all neutrons were the same energy, this cyclic phenomenon would not be observed, and one would lack key insight about designing moderators and fuel for a reactor.
 \subsection{Analytical Solution}
 Consider, for example, the previously discussed system in \figref{p1_setup}.
 Let us perform a multigroup diffusion analysis (assuming steady state operation) with two energy groups, and assume no upscattering from 2 to 1.
@@ -272,7 +291,7 @@ By evaluating the flux solutions from Eq.~\ref{eq:c1_flux} through \ref{eq:m2_fl
 The line-by-line arithmetic of these evaluations is long and not of substantial intrinsic value, and is not included in this report for brevity.
 The full coefficients have been evaluated separately using \texttt{Sympy}, and are used to evaluate final numeric values of this analytic solution.\cite{novak_computer_2026}
 
-\section{Numerical Solution}
+\subsection{Numerical Solution}
 As became evident in the previous section, solving for analytic solutions to multigroup and multi-region problems, where the total number of governing equations to solve increases rapidly, managing analytic solutions can be quickly unwieldy in all but the most simple scenarios.
 Instead, a common technique is to use finite-difference methods, where the derivatives of governing equations or boundary conditions are replaced with numerical approximations using the values at adjacent nodes.
 For the discussed system in \figref{p1_setup}, without upscattering and with only the source in group 1:\\
@@ -367,7 +386,27 @@ By combining both flux distributions $\phi_{1,i}$ and $\phi_{2,i}$ (each with $N
 \end{landscape}
 We implement a \texttt{Python} script to construct and solve the matrix equation seen in Eq.~\ref{eq:p1_mat}, through simple inversion ($\phi=A^{-1}b$), for the given system with two groups and two regions.
 \subsection{Results}
+\FloatBarrier
+Using the aforementioned script implementation, we solve for finite-difference solutions of two-group flux distributions in the system using cell counts of $N\in{5, 10, 20, 40}$, which may be observed in \figref{p1_full} compared to the analytical solution.
+As expected, the flux distributions in both thermal and fast groups are flat (or nearly so) near $x=0$, according to the symmetric boundary condition, and reduce to 0 near $x=a+b$, according to the vacuum boundary condition there.
+It may also be observed that fast neutron flux is maximized in region $C$, which possesses a distributed source $S$ of fast neutrons, while thermal neutron flux is maximized in region $M$ where neutrons readily downscatter from group 1 to 2.
+\defplot{p1_full}{The flux distributions solved for using finite-difference numerical solutions of cell counts $N\in{5, 10, 20, 40}$, compared to the analytical solution.}
+\FloatBarrier
 
+Performing the same finite-difference over meshes with $N\in{50, 100, 200, 400, 800, 1600}$, we compare the error across different step sizes $h$, finding an approximately linear order of convergence, with $\bigO(h^n)$ for $n\approx1.003$ using a linear regression of $\log(h)$ vs $\log(\mathrm{err})$.
+This convergence may be observed in \figref{p1_bigO}.
+\defplot{p1_bigO}{The error of numerical solutions }
+
+We characterize error of each flux solution vector $\phi$ relative to the analytical solution $\phi^*$, using Eq.~\ref{eq:err-def}
+\begin{equation}
+    \label{eq:err-def}
+    \mathrm{error} = \frac{\left|\left|\phi-\phi^*\right|\right|_2}{\left|\left|\phi^*\right|\right|_2}
+\end{equation}
+where the L$^2$ norm is defined for a vector $x$ of length $2N+2$ in Eq.~\ref{eq:l2-def} below:
+\begin{equation}
+    \label{eq:l2-def}
+    ||x||_2 = \sqrt{\sum_{i=0}^{2N+1}x_i^2}
+\end{equation}
 \FloatBarrier
 \section{Question 2}
 \FloatBarrier
@@ -375,7 +414,7 @@ We implement a \texttt{Python} script to construct and solve the matrix equation
 Now consider again the same two-region device as in \figref{p1_setup}, but instead for a multiplying system rather than one with a distributed source $S$.
 We shall consider two geometries of this multiplying system, with two different sets of multigroup properties.
 As seen in Eq.~\ref{eq:solve-gxs}, multigroup properties must be evaluated with at least basic assumptions about the energy spectrum of the system, in order to have grouped properties which are self-consistent in solving that system.
-Thus, for the two substantially different geometries considered in \figref{p2_setup}, it is not assumed that the spectra are fully comparable, and instead two different sets of group properties are identified and used.\\
+Thus, for the two substantially different geometries considered in \figref{p2_setup}, it is not assumed that the spectra are fully comparable, and instead two different sets of group properties must be identified and used, despite both ostensibly modeling the same materials.\\
 
 \subsection{Theory}
 Using multigroup diffusion theory to solve for these multiplying systems is similar in concept to non-multiplying multigroup diffusion.
@@ -419,6 +458,15 @@ We approximate the streaming term similarly as to the non-multiplying systems in
 \end{equation}
 As with the non-multiplying system, we then combine these equations into one flux distribution $\phi$ with $2N+2$ notes such that each value $X\in\phi, \Sigma, \dots$ becomes $X_{1,i}\rightarrow X_i$ for group 1, and $X_{2,i}\rightarrow X_{i+(N+1)}$ for group 2.
 For the boundaries at $0, N, N+1, 2N+1$, as the boundaries remain symmetric on the left and vacuum on the right, we apply the same boundary conditions as in Eqs.~\ref{eq:sym-findiff} and \ref{eq:vac-findiff}.\\
+
+\begin{equation}
+    \begin{gathered}
+        \ddx\phi_{0} \approx \frac{3\phi_{0}-4\phi_{1}+\phi_{2}}{2h}=0\\
+        \ddx\phi_{N+1} \approx \frac{3\phi_{N+1}-4\phi_{N+2}+\phi_{N+3}}{2h}=0\\
+        \phi_{N} = 0\\
+        \phi_{2N+1} = 0
+    \end{gathered}
+\end{equation}
 
 However, unlike with the non-multiplying system, there are no independent sources to put into a constant matrix $b$, $A\phi=b$.
 Instead, since we are solving for a multiplying system, we formulate a migration matrix $M$, and a fision matrix $F$ which contains the fission production terms all scaled by $\frac{1}{k}$ to form an equation $M\phi=\frac{1}{k}F\phi$, as seen in Eq.~\ref{eq:p2_mat}:
@@ -499,9 +547,12 @@ We implement a \texttt{Python} script which, starting from a reasonable initial 
 \subsection{Results}
 \FloatBarrier
 We use the previously described script to solve for flux distributions across both geometries and corresponding properties given in \figref{p2_setup}, for four different values of $N\in{20, 40, 80, 500}$, and compare to solutions obtained elsewhere for this problem using transport theory\cite{novak_computer_2026}.
-The flux distributions may be compared in \figref{fig:p2_fluxes}, and the $k$-values obtained compared in Table~\ref{tab:k_vals}.
+The flux distributions may be compared in \figref{fig:p2_fluxes}, and the $k$-values obtained compared in Table~\ref{tab:k_vals}.\\
+
+Fluxes in \figref{fig:p2_fluxes} appear to converge with higher cell counts $N$, but not exactly towards the transport-derived solution, which features a thermal spectrum peak consistently both more intense and farther to the right. 
 In all fluxes, we observe the boundary conditions at $x=0$, where sourceless symmetry dictates the slope be zero, and at the vacuum boundary $x=a+b$, where the flux value is zero.
 We also observe the strongest flux in the center near $x=0$ for fast neutrons, while thermal neutrons spike in the moderator adjacent to the material boundary $x=a$.
+For both geometries, the estimated $k$-value in Table~\ref{tab:k_vals} appears to underestimate at lower values of $N$, while converging towards a higher value, with the $a=10$ slab appearing to remain subcritical, and the $a=25$ slab appears to become supercritical.
 
 \begin{figure}
     \centering
@@ -534,6 +585,7 @@ If we were to use a one-speed model, we would not observe this phenomenon, often
 In our two-speed model, by contrast, we observe two distinct peaks in flux (\figref{fig:p2_fluxes}), one for fast flux in the core where fast neutrons are born through fission, and one for thermal flux in the moderator where thermal neutrons are born through downscattering.
 This has a spatially self-shielding effect, where fast neutrons are born in the core, diffuse to the moderator, downscatter to thermal neutrons, and then reenter the core region, maximizing fission reaction rates in the core near the boundary where thermal neutrons (which much more readily trigger fission) enter from the moderator.
 \\
+
 \defplot{p2_rrate}{The total fission reaction rate at every point in space for $a=25~\mathrm{cm}, b=25~\mathrm{cm},N=500$.}
 
 \FloatBarrier
@@ -542,7 +594,7 @@ The solutions obtained using the finite-difference method may be in turn approxi
 \begin{equation}
     \phi(x(\mu))=\sum_{i=0}^{m}C_iL_i(x)
 \end{equation}
-where $\mu$ is a rescaled spatial variable ranging from 0 at $x=0$ to 1 at $x=a+b$, as Legendre polynomials take input on the domain $0<x<1$.
+where $\mu$ is a rescaled spatial variable ranging from 0 at $x=0, g=1$ to 1 at $x=a+b, g=2$, as Legendre polynomials take input on the domain $0<x<1$.
 By evaluating some order $m$ of polynomials at each of the rescaled nodes of a numerical solution, and overfitting the numeric solution as a linear combination of each of the polynomials (in a matrix $A$), we can solve for a least-squares fit vector $\vec{L}$ of polynomial coefficients $L_i$:
 \begin{equation}
     \begin{gathered}
@@ -559,106 +611,127 @@ Using Eq.~\ref{eq:leg-find}, we solve for an order $m=50$ approximation two the 
     \caption{Legendre polynomial expansion with order 50 of the two-group flux vector found using $N=500$, for each geometry.}
     \label{fig:p2_legfit}
 \end{figure}
+
+\begin{table}
+    \centering
+    \caption{The first nine coefficients of order $m=50$ Legendre polynomial fits of solution flux vectors for two multiplying slab reactor geometries.}
+    \label{tab:l-coeffs}
+    \begin{tabular}{c|cccccccccc}
+        \hline
+        $a$ & $C_0$ & $C_1$ & $C_2$ & $C_3$ & $C_4$ & $C_5$ & $C_6$ & $C_7$ & $C_8$ &$ C_9$\\
+        \midrule
+        10~cm & 0.638 & -0.900 & 0.997 & -1.731 & 0.817 & 0.547 & -0.005 & -0.099 & -1.006 & 0.526\\
+        25~cm & 0.536 & -0.986 & 1.107 & -1.010 & -0.049 & 0.565 & -0.164 & 0.328 & -0.187 & -0.546\\
+        \hline
+    \end{tabular}
+\end{table}
 \FloatBarrier
-\section{Question 1}\label{sec:question1}
+\section{Conclusions}
+The objectives of this report were largely met.\\
 
-After your Introduction, you should have one section for each of the problems in this assignment. For example, for CP-1 there should be 3 sections. Each of these question sections should have an introduction to the problem, and then subsequent subsections for necessary theory/ derivations and for results. In each problem introduction, you should explicitly describe the problem being solved, the significance, and present the problem's geometry and properties. As a reminder, figure captions should be centered below the figure, and table captions should be centered above the table. To reference tables, figures, and equations in text you use the following command: \verb|\ref{label}|. For example, if I want to reference the image with the caption 'This image is super awesome', I would say \ref{fig:awesomefigure}. To tell \LaTeX where to put the image, you have a few options. You will notice in the command \verb|\begin{figure}[]| there is a set of brackets. This is how you tell \LaTeX where to put the image. There are three relevant commands: h for here, t for top, and b for bottom. All of these commands tell latex to put it in a convenient spot close to where you want. If you really want a figure somewhere and the compiler is refusing to put it there, you would add an exclamation point before the letter (!h). This tells the compiler to stop messing around and to put it where you want.
+Finite-difference solutions were constructed for both multiplying and non-multiplying systems, and observed to converge for finer meshes (visually for multiplying systems, and with order $\bigO(h^{1.003})$ for the non-multiplying system against an analytical solution).\\
 
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.5\linewidth]{figures/frog.jpg}
-    \caption{This image is super awesome}
-    \label{fig:awesomefigure}
-\end{figure}
+Spatial self-shielding was observed in the multiplying systems, with thermal flux being maximized in the edge of the moderator to the fuel, and fission reaction rate maximized in the edge of the fuel to the moderator, confirming the importance of energy-dependent analysis of neutron behavior.
+% \section{Question 1}\label{sec:question1}
 
-\begin{table}[h]
-    \centering
-    \caption{This table is super awesome!}
-    \label{tab:awesometable}
-    %vertically stretches each table entry, otherwise its a bit cramped
-    \renewcommand{\arraystretch}{1.5}
-    \begin{tabular}{|c|c|}
-         \toprule %thick horizontal line, good for emphasis
-         \bottomrule %^^^^^
-         Material Property & Value \\
-         \toprule 
-         \hline
-         $\Xi$ & 0 \\
-         \hline % adds horizontal line in table
-         $\Sigma$ & 1 \\
-         \hline
-         $a$ & 2\\
-         \hline
-    \end{tabular}
-\end{table}
+% After your Introduction, you should have one section for each of the problems in this assignment. For example, for CP-1 there should be 3 sections. Each of these question sections should have an introduction to the problem, and then subsequent subsections for necessary theory/ derivations and for results. In each problem introduction, you should explicitly describe the problem being solved, the significance, and present the problem's geometry and properties. As a reminder, figure captions should be centered below the figure, and table captions should be centered above the table. To reference tables, figures, and equations in text you use the following command: \verb|\ref{label}|. For example, if I want to reference the image with the caption 'This image is super awesome', I would say \ref{fig:awesomefigure}. To tell \LaTeX where to put the image, you have a few options. You will notice in the command \verb|\begin{figure}[]| there is a set of brackets. This is how you tell \LaTeX where to put the image. There are three relevant commands: h for here, t for top, and b for bottom. All of these commands tell latex to put it in a convenient spot close to where you want. If you really want a figure somewhere and the compiler is refusing to put it there, you would add an exclamation point before the letter (!h). This tells the compiler to stop messing around and to put it where you want.
 
-\subsection{Theory}
-In this subsection, you should present the relevant theory and full derivation of solutions. You should derive analytical solutions starting from the general equation, apply conditions to this general equation (steady-state, 1-D,\dots), list boundary conditions, and then solve. For example, the general heat diffusion equation.
-\begin{equation}
-    \nabla\cdot k\nabla T + q''' = \rho c_p \pd{T}{t}{}
-\end{equation}
+% \begin{figure}[h]
+%     \centering
+%     \includegraphics[width=0.5\linewidth]{figures/frog.jpg}
+%     \caption{This image is super awesome}
+%     \label{fig:awesomefigure}
+% \end{figure}
 
-Applying, steady state, no heat generation ($q''' = 0$), constant material properties, and then 1-D Cartesian coordinates ($\hat{x}$):
+% \begin{table}[h]
+%     \centering
+%     \caption{This table is super awesome!}
+%     \label{tab:awesometable}
+%     %vertically stretches each table entry, otherwise its a bit cramped
+%     \renewcommand{\arraystretch}{1.5}
+%     \begin{tabular}{|c|c|}
+%          \toprule %thick horizontal line, good for emphasis
+%          \bottomrule %^^^^^
+%          Material Property & Value \\
+%          \toprule 
+%          \hline
+%          $\Xi$ & 0 \\
+%          \hline % adds horizontal line in table
+%          $\Sigma$ & 1 \\
+%          \hline
+%          $a$ & 2\\
+%          \hline
+%     \end{tabular}
+% \end{table}
 
-\begin{subequations}
-    \begin{equation}
-        \nabla\cdot k\nabla T + q''' = 0
-    \end{equation}
-    \begin{equation}
-        \nabla\cdot k\nabla T = 0
-    \end{equation}
-    \begin{equation}
-        k\nabla^2T=0
-    \end{equation}
-    \begin{equation}
-        k\pd{T}{x}{2} = 0
-    \end{equation}
-\end{subequations}
+% \subsection{Theory}
+% In this subsection, you should present the relevant theory and full derivation of solutions. You should derive analytical solutions starting from the general equation, apply conditions to this general equation (steady-state, 1-D,\dots), list boundary conditions, and then solve. For example, the general heat diffusion equation.
+% \begin{equation}
+%     \nabla\cdot k\nabla T + q''' = \rho c_p \pd{T}{t}{}
+% \end{equation}
 
-Next, to list our boundary conditions.
+% Applying, steady state, no heat generation ($q''' = 0$), constant material properties, and then 1-D Cartesian coordinates ($\hat{x}$):
+
+% \begin{subequations}
+%     \begin{equation}
+%         \nabla\cdot k\nabla T + q''' = 0
+%     \end{equation}
+%     \begin{equation}
+%         \nabla\cdot k\nabla T = 0
+%     \end{equation}
+%     \begin{equation}
+%         k\nabla^2T=0
+%     \end{equation}
+%     \begin{equation}
+%         k\pd{T}{x}{2} = 0
+%     \end{equation}
+% \end{subequations}
+
+% Next, to list our boundary conditions.
             
-\begin{enumerate}[leftmargin=3cm,label=\textbf{\arabic*.})]
-    \item First boundary condition
-    \item Second boundary condition
-\end{enumerate}
+% \begin{enumerate}[leftmargin=3cm,label=\textbf{\arabic*.})]
+%     \item First boundary condition
+%     \item Second boundary condition
+% \end{enumerate}
 
-Now with everything defined, solve! After solving for the analytical solution, present the derivation of any numerical models used (i.e. Finite Difference Stencil). 
+% Now with everything defined, solve! After solving for the analytical solution, present the derivation of any numerical models used (i.e. Finite Difference Stencil). 
 
-\textit{\lipsum[2-4]}
+% \textit{\lipsum[2-4]}
 
-\clearpage
-\subsection{Results}
-Now with all problem set-up and derivations taken care o, this subsection focuses on results. Present your results in the order detailed in the assignment. Make it easy for the graders to review! As a reminder, \textit{ALL} figures and tables should have labels! Results figures should be easy to read and high quality. Don't forget grid lines!
+% \clearpage
+% \subsection{Results}
+% Now with all problem set-up and derivations taken care o, this subsection focuses on results. Present your results in the order detailed in the assignment. Make it easy for the graders to review! As a reminder, \textit{ALL} figures and tables should have labels! Results figures should be easy to read and high quality. Don't forget grid lines!
 
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.5\linewidth]{figures/demoplot.png}
-    \caption{This image is also super awesome}
-    \label{fig:results}
-\end{figure}
+% \begin{figure}[h]
+%     \centering
+%     \includegraphics[width=0.5\linewidth]{figures/demoplot.png}
+%     \caption{This image is also super awesome}
+%     \label{fig:results}
+% \end{figure}
 
-With the bulk content done, lets dive a little deeper into tables! In Table \ref{tab:cooltable} you will see three commands not present in Table \ref{tab:awesometable}: \verb|\multicolumn{}{}{}|, \verb|\multirow{}{}{}|, and \verb|\cline{}|. The first two merge cells horizontally and vertically, respectively. \verb|\cline{}| draws a horizontal line for the specified range of cells.
+% With the bulk content done, lets dive a little deeper into tables! In Table \ref{tab:cooltable} you will see three commands not present in Table \ref{tab:awesometable}: \verb|\multicolumn{}{}{}|, \verb|\multirow{}{}{}|, and \verb|\cline{}|. The first two merge cells horizontally and vertically, respectively. \verb|\cline{}| draws a horizontal line for the specified range of cells.
 
-\begin{table}[h]
-    \centering
-    \renewcommand{\arraystretch}{1.5}
-    \caption{This table shows cool formatting}
-    \label{tab:cooltable}
-    \begin{tabular}{|c|c|c|c|c|}
-         \toprule
-         \bottomrule
-         \multicolumn{2}{|c}{Text 1} & \multicolumn{3}{|c|}{Text 2} \\
-         \hline
-         Words 1 & Words 2 & Words 3 & Word 4 & Words 5 \\
-         \hline
-         \multirow{2}{*}{Other 1} & Other 2 & Other 3 & Other 4 & Other 5\\
-         \cline{2-5}
-         & Other 6 & Other 7 & Other 8 & Other 9\\
-         \hline
-    \end{tabular}
-\end{table}
+% \begin{table}[h]
+%     \centering
+%     \renewcommand{\arraystretch}{1.5}
+%     \caption{This table shows cool formatting}
+%     \label{tab:cooltable}
+%     \begin{tabular}{|c|c|c|c|c|}
+%          \toprule
+%          \bottomrule
+%          \multicolumn{2}{|c}{Text 1} & \multicolumn{3}{|c|}{Text 2} \\
+%          \hline
+%          Words 1 & Words 2 & Words 3 & Word 4 & Words 5 \\
+%          \hline
+%          \multirow{2}{*}{Other 1} & Other 2 & Other 3 & Other 4 & Other 5\\
+%          \cline{2-5}
+%          & Other 6 & Other 7 & Other 8 & Other 9\\
+%          \hline
+%     \end{tabular}
+% \end{table}
 
-\textit{\lipsum[2-3]}
+% \textit{\lipsum[2-3]}
+
 
 \clearpage
 \section{References}\label{sec:References}
