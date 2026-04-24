@@ -19,6 +19,7 @@
 %Math
 \usepackage{amsmath} % Package provides useful math environments
 \usepackage{amssymb} % Package provides more symbols than base LaTeX
+\usepackage{xcolor} % colors yippee
 
 %Lists
 \usepackage{enumitem} %Package for helpful list formatting
@@ -144,7 +145,7 @@ However, in this report we seek to include information about the energies of neu
 The distribution of material properties, and subsequently of neutron flux, vary too wildly with energy to reasonably integrate into this model as a continuous energy process (as opposed to Monte Carlo methods, where calculations for a single neutron could feasibly sample near-continuous property information).
 Rather, a typical approach involves \emph{multigroup theory}, in which neutrons are categorized into some finite $G$ groups of energy, finely enough that within each group $g$ properties are self-consistent:
 \begin{equation}
-    \frac{1}{v}\pd{\phi_g}{t}{} - \nabla\cdot D_g\nabla\phi_g + \Sigma_{ag}\phi_g + \sum_{g'\neq g}^{G}\Sigma_{sg\rightarrow g'}\phi_g=\sum_{g'\neq g}^{G}\Sigma_{sg'\rightarrow g}\phi_{g'} + \nu\Sigma_{fg}\phi_g + S_g
+    \frac{1}{v}\pd{\phi_g}{t}{} - \nabla\cdot D_g\nabla\phi_g + \Sigma_{ag}\phi_g + \sum_{g'\neq g}^{G}\Sigma_{sg\rightarrow g'}\phi_g=\sum_{g'\neq g}^{G}\Sigma_{sg'\rightarrow g}\phi_{g'} + \chi_g\nu\sum_{g'}^{G}{\Sigma_{fg'}\phi_g'} + S_g
     \label{eq:multigroup-diff}
 \end{equation}
 \newcommand{\outscat}{\Sigma_{sg\rightarrow g'}}
@@ -185,22 +186,83 @@ This yields two flux distributions to solve for using diffusion theory:
     \label{eq:multigroup-diff-nospace}
     \end{aligned}
 \end{equation}
-Considering the one-dimensional, two-region problem, for which the source $S$ is only relevant to the fast group $g=1$ in region $C$, converts this to a set of four distributions (which we refactor using removal cross-sections and diffusion length $L_g^2=\frac{D_g}{\SigRem}$):
+Considering the one-dimensional, two-region problem, for which the source $S$ is only relevant to the fast group $g=1$ in region $C$, converts this to a set of four governing equations (which we refactor using removal cross-sections and diffusion length $L_g^2=\frac{D_g}{\SigRem}$):
 \begin{align}
-    \pd{\phi_{C1}}{x}{2} - \frac{1}{L_{C1}^2}\phi_{C1} &= -\frac{S_{C1}}{D_{C1}}\label{eq:c1_flux}\\
-    \pd{\phi_{C2}}{x}{2} - \frac{1}{L_{C2}^2}\phi_{C2} &= -\Sigma_{sC1\rightarrow2}\phi_{C1}\label{eq:c2_flux}\\
-    \pd{\phi_{M1}}{x}{2} - \frac{1}{L_{M1}^2}\phi_{M1} &= 0 \label{eq:m1_flux}\\
-    \pd{\phi_{M2}}{x}{2} - \frac{1}{L_{M2}^2}\phi_{M2} &= -\Sigma_{sM1\rightarrow2}\phi_{M1}\label{eq:m2_flux}
+    \pd{\phi_{C1}}{x}{2} - \frac{1}{L_{C1}^2}\phi_{C1} &= -\frac{S_{C1}}{D_{C1}}\label{eq:c1_govern}\\
+    \pd{\phi_{C2}}{x}{2} - \frac{1}{L_{C2}^2}\phi_{C2} &= -\frac{\Sigma_{sC1\rightarrow2}}{D_{C2}}\phi_{C1}\label{eq:c2_govern}\\
+    \pd{\phi_{M1}}{x}{2} - \frac{1}{L_{M1}^2}\phi_{M1} &= 0 \label{eq:m1_govern}\\
+    \pd{\phi_{M2}}{x}{2} - \frac{1}{L_{M2}^2}\phi_{M2} &= -\frac{\Sigma_{sM1\rightarrow2}}{D_{M2}}\phi_{M1}\label{eq:m2_govern}
 \end{align}
-
-As anticipated from earlier discussion, Eqs.~\ref{eq:c1_flux} and \ref{eq:m1_flux} are independent of other distributions, and can be solved first.
+\newcommand{\SigR}[1]{\Sigma_{R#1}}
+As anticipated from earlier discussion, Eqs.~\ref{eq:c1_govern} and \ref{eq:m1_govern} are independent of other distributions, and can be solved first.
 The flux $\phi_{C1}$ (core region $C$, fast group 1), with distributed source $S$, can be broken into homogenous and partial solutions:
 \begin{equation}
     \begin{gathered}
         \phi_{C1}=\phi_h + \phi_p\\
-        \pd{\phi_h}{x}{2} - \frac{1}{L_{C2}^2}\phi = -\frac{S}{D_{C2}}
+        \pd{\phi_h}{x}{2} - \frac{1}{L_{C1}^2}\phi_h = 0\\
+        \rightarrow\pd{\phi_h}{x}{2} = A_0\cosh(\frac{x}{L_{C1}}) + A_1\sinh(\frac{x}{L_{C1}})\\
+        \pd{\phi_p}{x}{2} - \frac{1}{L_{C1}^2}\phi_p = -\frac{S}{D_{C1}} \\
+        \rightarrow\phi_p = L_{C1}^2\frac{S}{D_{C1}} = \frac{S}{\SigR{C1}} \\
+        \rightarrow\phi_{C1} = A_0\cosh(\frac{x}{L_{C1}}) + A_1\sinh(\frac{x}{L_{C1}}) + \frac{S}{\SigR{C1}}
+    \end{gathered}
+    \label{eq:c1_flux}
+\end{equation}
+The other fast distribution $\phi_{M1}$, without such a source, simply reduces to a Helmholtz equation:
+\begin{equation}
+    \begin{gathered}
+        \pd{\phi_{M1}}{x}{2} - \frac{1}{L_{M1}^2}\phi_{M1} = 0\\
+        \rightarrow\phi_{M1} = A_2\cosh(\frac{x}{L_{M1}^2}) + A_3\sinh(\frac{x}{L_{M1}^2}) \\
+    \end{gathered}
+    \label{eq:m1_flux}
+\end{equation}
+These flux solutions can then be plugged into the governing equations for the low energy groups, and solving using viable particular and homogenous solutions:
+\begin{equation}
+    \begin{gathered}
+        \pd{\phi_{C2}}{x}{2} - \frac{1}{L_{C2}^2}\phi_{C2} = -\frac{\Sigma_{sC1\rightarrow2}}{D_{C2}}\phi_{C1}\\
+        \pd{\phi_{C2}}{x}{2} - \frac{1}{L_{C2}^2}\phi_{C2} = -\frac{\Sigma_{sC1\rightarrow2}}{D_{C1}}\left(A_0\cosh(\frac{x}{L_{C1}}) + A_1\sinh(\frac{x}{L_{C2}}) + \frac{S}{\SigRem}\right)\\
+        \phi_{C2} = \phi_h + \phi_p\\
+        \pd{\phi_h}{x}{2} - \frac{1}{L_{C2}^2}\phi_h = 0\\
+        \rightarrow\phi_h = A_4\cosh(\frac{x}{L_C2}) + A_5\sinh(\frac{x}{L_C2})\\
+        \pd{\phi_p}{x}{2} - \frac{1}{L_{C2}^2}\phi_p = -\frac{\Sigma_{sC1\rightarrow2}}{D_{C2}}\left(A_0\cosh(\frac{x}{L_{C1}}) + A_1\sinh(\frac{x}{L_{C1}}) + \frac{S}{\SigR{C1}}\right)\\
+        \phi_p = -\frac{\Sigma_{sC1\rightarrow2}}{D_{C2}}\left(C_0\cosh(\frac{x}{L_{C1}}) + C_1\sinh(\frac{x}{L_{C1}}) + C_2x^2 + C_3x + C_4\right)\\
+        \color{gray}C_0=A_0\frac{L_{C1}^2L_{C2}^2}{L_{C1}-L_{C2}}, C_1=A_1\frac{L_{C1}^2L_{C2}^2}{L_{C1}-L_{C2}}\\
+        \color{gray}C_2=0,C_3=0,C_4=-\frac{SL_{C2}^2}{\SigR{C1}}\\
+        \rightarrow\phi_p = -\frac{\Sigma_{sC1\rightarrow2}}{D_{C2}}\left(A_0\frac{L_{C1}^2L_{C2}^2}{L_{C1}-L_{C2}}\cosh(\frac{x}{L_{C1}}) + A_1\frac{L_{C1}^2L_{C2}^2}{L_{C1}-L_{C2}}\sinh(\frac{x}{L_{C1}})-\frac{SL_{C2}^2}{\SigR{C1}}\right)\\
     \end{gathered}
 \end{equation}
+\begin{multline}
+    \rightarrow\phi_{C2}=A_4\cosh(\frac{x}{L_C2}) + A_5\sinh(\frac{x}{L_C2})\hfill\\\hfill-\frac{\Sigma_{sC1\rightarrow2}}{D_{C2}}\left(A_0\frac{L_{C1}^2L_{C2}^2}{L_{C1}-L_{C2}}\cosh(\frac{x}{L_{C1}}) + A_1\frac{L_{C1}^2L_{C2}^2}{L_{C1}-L_{C2}}\sinh(\frac{x}{L_{C1}})-\frac{SL_{C2}^2}{\SigR{C1}}\right)
+\label{eq:c2_flux}
+\end{multline}
+This process can then be repeated for the slow flux of region $M$:
+\begin{equation}
+    \begin{gathered}
+        \pd{\phi_{M2}}{x}{2} - \frac{1}{L_{M2}^2}\phi_{M2} = -\frac{\Sigma_{sM1\rightarrow2}}{D_{M2}}\phi_{M1}\\
+        \pd{\phi_{M2}}{x}{2} - \frac{1}{L_{M2}^2}\phi_{M2} = -\frac{\Sigma_{sM1\rightarrow2}}{D_{M1}}\left(A_2\cosh(\frac{x}{L_{M1}}) + A_3\sinh(\frac{x}{L_{M2}})\right)\\
+        \phi_{M2} = \phi_h + \phi_p\\
+        \pd{\phi_h}{x}{2} - \frac{1}{L_{M2}^2}\phi_h = 0\\
+        \rightarrow\phi_h = A_6\cosh(\frac{x}{L_M2}) + A_7\sinh(\frac{x}{L_M2})\\
+        \pd{\phi_p}{x}{2} - \frac{1}{L_{M2}^2}\phi_p = -\frac{\Sigma_{sM1\rightarrow2}}{D_{M2}}\left(A_2\cosh(\frac{x}{L_{M1}}) + A_3\sinh(\frac{x}{L_{M1}})\right)\\
+        \phi_p = -\frac{\Sigma_{sM1\rightarrow2}}{D_{M2}}\left(C_5\cosh(\frac{x}{L_{M1}}) + C_6\sinh(\frac{x}{L_{M1}})\right)\\
+        \color{gray}C_5=A_2\frac{L_{M1}^2L_{M2}^2}{L_{M1}-L_{M2}}, C_6=A_3\frac{L_{M1}^2L_{M2}^2}{L_{M1}-L_{M2}}\\
+        \rightarrow\phi_p = -\frac{\Sigma_{sM1\rightarrow2}}{D_{M2}}\left(A_2\frac{L_{M1}^2L_{M2}^2}{L_{M1}-L_{M2}}\cosh(\frac{x}{L_{M1}}) + A_3\frac{L_{M1}^2L_{M2}^2}{L_{M1}-L_{M2}}\sinh(\frac{x}{L_{M1}})\right)\\
+    \end{gathered}
+\end{equation}
+\begin{multline}
+    \rightarrow\phi_{M2}=A_6\cosh(\frac{x}{L_M2}) + A_7\sinh(\frac{x}{L_M2})\hfill\\\hfill-\frac{\Sigma_{sM1\rightarrow2}}{D_{M2}}\left(A_2\frac{L_{M1}^2L_{M2}^2}{L_{M1}-L_{M2}}\cosh(\frac{x}{L_{M1}}) + A_3\frac{L_{M1}^2L_{M2}^2}{L_{M1}-L_{M2}}\sinh(\frac{x}{L_{M1}})-\frac{SL_{M2}^2}{\SigR{M1}}\right)
+\label{eq:m2_flux}
+\end{multline}
+These eight coefficients $A_0$ through $A_7$ can then be solved for using a set of eight boundary conditions: two reflection boundaries at $x=0$ for $\phi_{C1},\phi_{C2}$, two vacuum boundaries at $x=a+b$ for $\phi_{M1},\phi_{M2}$, and two conserservations each of flux and current (between $C$ and $M$ in groups 1 and 2), for a total of eight boundary conditions:
+\begin{gathered}
+    -D_{C1}\pd{\phi_{C1}}{x}{}(x=0)=0\\
+    -D_{C2}\pd{\phi_{C2}}{x}{}(x=0)=0\\
+    {\phi_{M1}}({x=a+b+2D_{M1}})=0\\
+    {\phi_{M2}}({x=a+b+2D_{M2}})=0\\
+    \phi_{C1}(x=a)=\phi_{M1}(x=a)\\
+    \phi_{C2}(x=a)=\phi_{M2}(x=a)\\
+    -D_{C1}\pd{\phi_{C1}}{x}{}(x=a)=-D_{M1}\pd{\phi_{M1}}{x}{}(x=a)\\
+    -D_{C2}\pd{\phi_{C2}}{x}{}(x=a)=-D_{M2}\pd{\phi_{M2}}{x}{}(x=a)
+\end{gathered}
 
 \section{Question 1}\label{sec:question1}
 
