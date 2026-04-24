@@ -20,6 +20,7 @@
 \usepackage{amsmath} % Package provides useful math environments
 \usepackage{amssymb} % Package provides more symbols than base LaTeX
 \usepackage{xcolor} % colors yippee
+\usepackage{lscape} % put that one evil matrix into landscape mode
 
 %Lists
 \usepackage{enumitem} %Package for helpful list formatting
@@ -168,6 +169,7 @@ To select groups of energy across with properties are \emph{similar} would still
 Thus, knowing the energy spectrum of a comparable existing system, one could define properties for energy groups by integrating over that section:
 \begin{equation}
     \Sigma_g=\frac{\int_{E_g}^{E_{g+1}}\Sigma(E)\phi(E)dE}{\int_{E_g}^{E_{g+1}}\phi(E)dE}
+    \label{eq:solve-gxs}
 \end{equation}
 This yields, as seen in Eq.~\ref{eq:multigroup-diff} a diffusion equation for each group which can be solved with two boundary conditions, as for the single group model.
 However, since inscattering depends on every other energy's flux distribution, the flux distributions $\phi_g$ depend on all other distributions $\phi_{g'}$, producing tightly coupled diffusion equations with a very involved solution process.
@@ -177,14 +179,14 @@ This makes the fastest flux distribution $\phi_1$ independent of the rest, allow
 The next flux distribution $\phi_2$, then, only depending on the single higher energy group $\phi_1$, can then use the $\phi_1$ solution and be solved itself, and so on and so forth until either the slowest group or reaching multiple thermal groups.
 \subsection{Analytical Solution}
 Consider, for example, the previously discussed system in \figref{p1_setup}.
-Let us perform a multigroup diffusion analysis with two energy groups, and assume no upscattering from 2 to 1.
+Let us perform a multigroup diffusion analysis (assuming steady state operation) with two energy groups, and assume no upscattering from 2 to 1.
 This yields two flux distributions to solve for using diffusion theory:
 \begin{equation}
     \begin{aligned}
-        - \nabla\cdot D_1\nabla\phi_1 + (\Sigma_{a1}+\Sigma_{s1\rightarrow 2})\phi_1= \nu\Sigma_{f1}\phi_1 + S_1\\
-        - \nabla\cdot D_2\nabla\phi_2 + \Sigma_{a2}\phi_2= \nu\Sigma_{f2}\phi_2 + S_2\\
-    \label{eq:multigroup-diff-nospace}
+        - \nabla\cdot D_1\nabla\phi_1 + (\Sigma_{a1}+\Sigma_{s1\rightarrow 2})\phi_1= S_1\\
+        - \nabla\cdot D_2\nabla\phi_2 + \Sigma_{a2}\phi_2= \Sigma_{1\rightarrow2}\phi_1 + S_2\\
     \end{aligned}
+    \label{eq:multigroup-diff-nospace}
 \end{equation}
 Considering the one-dimensional, two-region problem, for which the source $S$ is only relevant to the fast group $g=1$ in region $C$, converts this to a set of four governing equations (which we refactor using removal cross-sections and diffusion length $L_g^2=\frac{D_g}{\SigRem}$):
 \begin{align}
@@ -253,6 +255,7 @@ This process can then be repeated for the slow flux of region $M$:
 \label{eq:m2_flux}
 \end{multline}
 These eight coefficients $A_0$ through $A_7$ can then be solved for using a set of eight boundary conditions: two reflection boundaries at $x=0$ for $\phi_{C1},\phi_{C2}$, two vacuum boundaries at $x=a+b$ for $\phi_{M1},\phi_{M2}$, and two conserservations each of flux and current (between $C$ and $M$ in groups 1 and 2), for a total of eight boundary conditions:
+\begin{equation}
 \begin{gathered}
     -D_{C1}\pd{\phi_{C1}}{x}{}(x=0)=0\\
     -D_{C2}\pd{\phi_{C2}}{x}{}(x=0)=0\\
@@ -263,7 +266,153 @@ These eight coefficients $A_0$ through $A_7$ can then be solved for using a set 
     -D_{C1}\pd{\phi_{C1}}{x}{}(x=a)=-D_{M1}\pd{\phi_{M1}}{x}{}(x=a)\\
     -D_{C2}\pd{\phi_{C2}}{x}{}(x=a)=-D_{M2}\pd{\phi_{M2}}{x}{}(x=a)
 \end{gathered}
+\label{eq:bounds}
+\end{equation}
+By evaluating the flux solutions from Eq.~\ref{eq:c1_flux} through \ref{eq:m2_flux} at these boundary conditions, the coefficients can be found.
+The line-by-line arithmetic of these evaluations is long and not of substantial intrinsic value, and is not included in this report for brevity.
+The full coefficients have been evaluated separately using \texttt{Sympy}, and are used to evaluate final numeric values of this analytic solution.\cite{novak_computer_2026}
 
+\section{Numerical Solution}
+As became evident in the previous section, solving for analytic solutions to multigroup and multi-region problems, where the total number of governing equations to solve increases rapidly, managing analytic solutions can be quickly unwieldy in all but the most simple scenarios.
+Instead, a common technique is to use finite-difference methods, where the derivatives of governing equations or boundary conditions are replaced with numerical approximations using the values at adjacent nodes.
+For the discussed system in \figref{p1_setup}, without upscattering and with only the source in group 1:\\
+\begin{equation}
+    \begin{aligned}
+        - [\nabla\cdot D_1\nabla\phi_1]_i + (\Sigma_{a1i}+\Sigma_{s1\rightarrow 2i})\phi_{1i}= S_{1i}\\
+        - [\nabla\cdot D_2\nabla\phi_2]_i + \Sigma_{a2i}\phi_{2i}= \Sigma_{1\rightarrow2i}\phi_{1i}\\
+    \label{eq:multigroup-diff-nospace}
+    \end{aligned}
+\end{equation}
+
+
+
+For the streaming term $-\pd{}{x}{}D\pd{\phi}{x}{}$, a finite difference approximation can be made using the two adjacent nodes\cite{OpenMC}:
+\newcommand{\pfrac}{\left(\frac{D_{i+1}}{D_i+D_{i+1}}\right)}
+\newcommand{\mfrac}{\left(\frac{D_{i-1}}{D_i+D_{i-1}}\right)}
+\newcommand{\ddx}{\pd{}{x}{}}
+\begin{equation}
+    \label{eq:conserv-stream}
+    \left[-\ddx D\ddx\phi\right]_i = -\frac{D_i}{h^2/2}\left(\pfrac\left(\phi_{i+1}-\phi_i\right)+\mfrac\left(\phi_{i-1}-\phi_i\right)\right) 
+\end{equation}
+This form of the equation is conservative, meaning it does not assume constant $D$ and can be used across material boundaries in space.
+\newcommand{\dL}[1]{d_{L,#1}}
+\newcommand{\dR}[1]{d_{R,#1}}
+\newcommand{\dLR}[1]{d_{LR,#1}}
+
+\renewcommand{\pfrac}{\left(\frac{D_{g,i+1}}{D_{gi}+D_{g,i+1}}\right)}
+\renewcommand{\mfrac}{\left(\frac{D_{g,i-1}}{D_{gi}+D_{g,i-1}}\right)}
+Inserting this form into Eq.~\ref{eq:multigroup-diff-nospace}, expanding each term and substituting shorthand $\dL{gi}=\frac{D_{gi}}{h^2/2}\mfrac$ and $\dR{gi}=\frac{D_{gi}}{h^2/2}\pfrac$ for the repeated fractions in Eq.~\ref{eq:conserv-stream}:
+\begin{equation}
+    \label{eq:shorthand}
+    \begin{split}
+        \dL{gi}&=\frac{D_{gi}}{h^2/2}\mfrac\\
+        \dR{gi}&=\frac{D_{gi}}{h^2/2}\pfrac
+    \end{split}
+\end{equation}
+\begin{equation}
+    \begin{gathered}
+        -d_L\phi_{1,i-1} + \left(d_L+d_R+\Sigma_{R1,i}\right)\phi_{1,i} - d_R\phi_{1,i+1} = S_{1,i} \\
+        -d_L\phi_{2,i-1} + \left(d_L+d_R+\Sigma_{a2,i}\right)\phi_{2i} - d_R\phi_{2,i+1} = \Sigma_{s1\rightarrow2,i}\phi_{1,i}
+    \end{gathered}
+    \label{eq:center-findiff}
+\end{equation}
+These equations apply to every of the $N+1$ nodes except for the leftmost $i=0$ and rightmost $i=N$, which lack such relative nodes $i-1$ and $i+1$, respectively.
+Instead, at these points, we may apply the boundary conditions of $x=0$ and $x=a+b$.\\
+
+At $x=0$, we apply the same symmetric boundary condition seen in Eq.~\ref{eq:bounds}, using a right-handed approximation of $\ddx\phi$:
+\begin{equation}
+    \label{eq:sym-findiff}
+    \ddx\phi_{g,0} \approx \frac{3\phi_{g,0}-4\phi_{g,1}+\phi_{g,2}}{2h}=0
+\end{equation}
+Then, neglecting the extrapolated distance as in Eq.~\ref{eq:vac-bound}, no approximation of the derivative is necessary, and we simply set the final node's flux to zero:
+\begin{equation}
+    \label{eq:vac-findiff}
+    \phi_{g,N} = 0
+\end{equation}
+
+By combining both flux distributions $\phi_{1,i}$ and $\phi_{2,i}$ (each with $N+1$ total nodes) into one distribution $\phi_i$ (with $2N+2$ nodes), such that references to any value $X\in\phi, \Sigma, \dots$ become $X_{1,i}\rightarrow X_i$ for group 1, and $X_{2,i}\rightarrow X_{i+(N+1)}$ for group 2, these series of equations for each of the $2N+2$ can be combined into one large matrix equation:
+
+\newcommand{\downscat}[1]{\Sigma_{s1\rightarrow2,#1}}
+\begin{landscape}
+    \small
+    \begin{equation}
+        \begin{aligned}
+    \begin{bmatrix}
+        -3 & 4 & -1 & & &   &&&&  \\
+        -\dL{1} & \dLR{1}+\Sigma_{R,1} & -\dR{1} && &&&&\\
+        & -\dL{2} & \dLR{2}+\Sigma_{R,2} & -\dR{2} & &&&&\\
+        &&\ddots& \ddots & \ddots &&&&\\
+        &&-\dL{N-1} & \dLR{N-1}+\Sigma_{R,N-1} & -\dR{N-1} &&&&\\
+        &&&&1 &&&&\\
+        0&&&& -3 & 4 & -1 & & &     \\
+        &-\downscat{1}&&&&   -\dL{1+(N+1)} & \dLR{1+(N+1)}+\Sigma_{R,1+(N+1)} & -\dR{1+(N+1)} &&\\
+        &&-\downscat{2}&&&&   -\dL{2+(N+1)} & \dLR{2+(N+1)}+\Sigma_{R,2+(N+1)} & -\dR{2+(N+1)} &\\
+        &&\ddots& \ddots & \ddots &&\ddots& \ddots & \ddots\\
+        && & -\downscat{2N} & &&-\dL{2N} & \dLR{2N}+\Sigma_{R,2N} & -\dR{2N}\\
+        &&&&0 &&&&1 \\
+    \end{bmatrix}&\\
+    A&\\
+    \times\begin{bmatrix}
+        \phi_0\\\phi_1\\\phi_2\\\vdots\\\phi_{2N}\\\phi_{2N+1}
+    \end{bmatrix}&\\
+    \times \phi&\\
+    =
+    \begin{bmatrix}
+        0\\S_1\\S_2\\\vdots\\S_{2N}\\0
+    \end{bmatrix}& \\
+    =b&\\
+        \end{aligned}
+    \end{equation}
+    \label{eq:p1_mat}
+\end{landscape}
+We implement a \texttt{Python} script to construct and solve the matrix equation seen in Eq.~\ref{eq:p1_mat}, through simple inversion ($\phi=A^{-1}b$), for the given system with two groups and two regions.
+
+\FloatBarrier
+\section{Question 2}
+\FloatBarrier
+\defplot{p2_setup}{The problem setup and property sets of a multiplying system.\cite{novak_computer_2026}}
+Now consider again the same two-region device as in \figref{p1_setup}, but instead for a multiplying system rather than one with a distributed source $S$.
+We shall consider two geometries of this multiplying system, with two different sets of multigroup properties.
+As seen in Eq.~\ref{eq:solve-gxs}, multigroup properties must be evaluated with at least basic assumptions about the energy spectrum of the system, in order to have grouped properties which are self-consistent in solving that system.
+Thus, for the two substantially different geometries considered in \figref{p2_setup}, it is not assumed that the spectra are fully comparable, and instead two different sets of group properties are identified and used.\\
+
+\subsection{Theory}
+Using multigroup diffusion theory to solve for these multiplying systems is similar in concept to non-multiplying multigroup diffusion.
+As in the non-multiplying system, we consider a diffusion equation for each energy group $g$ using Eq.~\ref{eq:multigroup-diff}, but this time, retaining fission contributions instead of the distributed source:
+\begin{equation}
+    \frac{1}{v}\pd{\phi_g}{t}{} - \nabla\cdot D_g\nabla\phi_g + \Sigma_{ag}\phi_g + \sum_{g'\neq g}^{G}\Sigma_{sg\rightarrow g'}\phi_g=\sum_{g'\neq g}^{G}\Sigma_{sg'\rightarrow g}\phi_{g'} + \chi_g\nu\sum_{g'}^{G}{\Sigma_{fg'}\phi_g'}
+    \label{eq:fission-multigroup-diff}
+\end{equation}
+As with single group analysis, the time rate of change cannot immediately be ignored, and instead the equation is considered for a possible energy mode\cite{strong_npre_2026}, or relative flux distribution (i.e. independent of magnitude), and the fission multiplication term $\nu\Sigma_f$ scaled by $1/k$, to solve for the distribution independently of its time change.
+The term $\chi_g$, retained in this analysis, represents the fraction of all fission neutrons that are born at this particular energy group.
+Neutrons are typically born at very high energies from fission, so for an analysis using two groups, one may typically assume $\chi_1=1,\chi_2=0$, rather than including $\chi$ terms in the final equations.
+Applying this assumption, alongside the assumption that no neutrons can upscatter from group 2 to 1, we obtain the following two-group governing equations for the multiplying region $C$:
+\begin{equation}
+    \begin{aligned}
+        - \nabla\cdot D_{C1}\nabla\phi_{C1} + (\Sigma_{aC1}+\Sigma_{sC1\rightarrow 2})\phi_{C1}&= \frac{1}{k}\left(\nu\Sigma_{fC1}\phi_{C1} + \nu\Sigma_{fC2}\phi_{C2}\right)\\
+        - \nabla\cdot D_{C2}\nabla\phi_{C2} + \Sigma_{aC2}\phi_{C2} -  \Sigma_{sC1\rightarrow2}\phi_{C1} &= 0\\
+    \end{aligned}
+    \label{eq:fission-twogroup}
+\end{equation}
+For the region $M$, with no fission cross-section, this reduces more simply:
+\begin{equation}
+    \begin{aligned}
+        - \nabla\cdot D_{M1}\nabla\phi_{M1} + (\Sigma_{aM1}+\Sigma_{sM1\rightarrow 2})\phi_{M1}&= 0\\
+        - \nabla\cdot D_{M2}\nabla\phi_{M2} + \Sigma_{aM2}\phi_{M2} -  \Sigma_{sM1\rightarrow2}\phi_{M1} &= 0\\
+    \end{aligned}
+    \label{eq:nothing-twogroup}
+\end{equation}
+As with the multiplying equation, we would solve for general solutions to these four governing equations, and introduce eight boundary conditions to precisely identify the final solutions.\\
+
+For the distributions of flux in $M$ in Eq.~\ref{eq:nothing-twogroup}, which is non-multiplying, we could apply similar analytical procedure to the non-multiplying system discussed in the previous question.
+However, for the $C$ region equations of Eq.~\ref{eq:fission-twogroup}, this procedure of identifying one solution first fails, as the two equations are now tightly coupled to each other, and we cannot choose one to solve first independently.
+The specific algebraic techniques used to solve these tightly coupled differential equations are beyond the scope of this report, and examples may be found elsewhere.\cite{novak_lecture21_2026}\\
+\subsection{Numerical Solution}
+Instead, these governing equations will be used to construct a finite-difference solution from the start.
+We approximate the streaming term similarly as to the non-multiplying systems in Eq.~\ref{eq:conserv-stream}, yielding similar governing finite-difference equations for body nodes $i\in{1,2,\dots,N-1}$ and $i\in{N+2,N+3,\dots,2N}$:
+
+
+Eqs.~\ref{eq:sym-findiff} and \ref{eq:vac-findiff}, yielding the same 
 \section{Question 1}\label{sec:question1}
 
 After your Introduction, you should have one section for each of the problems in this assignment. For example, for CP-1 there should be 3 sections. Each of these question sections should have an introduction to the problem, and then subsequent subsections for necessary theory/ derivations and for results. In each problem introduction, you should explicitly describe the problem being solved, the significance, and present the problem's geometry and properties. As a reminder, figure captions should be centered below the figure, and table captions should be centered above the table. To reference tables, figures, and equations in text you use the following command: \verb|\ref{label}|. For example, if I want to reference the image with the caption 'This image is super awesome', I would say \ref{fig:awesomefigure}. To tell \LaTeX where to put the image, you have a few options. You will notice in the command \verb|\begin{figure}[]| there is a set of brackets. This is how you tell \LaTeX where to put the image. There are three relevant commands: h for here, t for top, and b for bottom. All of these commands tell latex to put it in a convenient spot close to where you want. If you really want a figure somewhere and the compiler is refusing to put it there, you would add an exclamation point before the letter (!h). This tells the compiler to stop messing around and to put it where you want.
