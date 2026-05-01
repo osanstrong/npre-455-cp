@@ -230,7 +230,7 @@ quartz = openmc.Material(name="quartz")
 quartz.add_element("Si",1)
 quartz.add_element("O", 2)
 # quartz.add_s_alpha_beta("c_Si_in_SiO2")
-quartz_densities = [0.5, 0.7, 0.85, 1, 1.3, 1.4, 2, 3, 3.5, 4, 4.5, 5, 6]
+quartz_densities = [0.5, 0.7, 0.85, 1, 1.3, 1.4, 2, 3, 3.5, 4, 4.5, 5, 6, 8, 10, 12, 14, 15, 20, 30, 40, 50, 60, 80, 100, 120, 150, 200]
 
 
 vanillin = openmc.Material(name="vanillin")
@@ -250,7 +250,7 @@ vsyrup_densities = [0.5, 0.7, 0.8, 0.9, 1, 1.2, 1.4, 1.6, 2, 2.1, 2.2, 2.4, 3, 4
 vanillin_densities = sorted(vsyrup_densities + [3.25, 3.5, 3.75, 5, 6])
 
 kval_sets = []
-moderators = [quartz, corn_syrup, vsyrup, vanillin]
+moderators = [quartz, corn_syrup, vanillin]
 
 density_sets = {
     quartz:quartz_densities,

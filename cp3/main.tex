@@ -34,7 +34,7 @@
 \newcommand{\defplotW}[3]{
     \begin{figure}[!htb]
         \centering
-        \includegraphics[width=#3\linewidth]{figures/#1.png}
+        \includegraphics[width=#3\linewidth]{fig/#1.png}
         \caption{#2}
         \newcommand{\tmplabel}{#1}
         \label{\tmplabel}
@@ -44,7 +44,7 @@
 \newcommand{\defsubplotW}[3]{
     % \hfill
     \begin{subfigure}{#3\linewidth}
-        \includegraphics[width=\textwidth]{figures/#1.png}
+        \includegraphics[width=\textwidth]{fig/#1.png}
         \caption{#2}
         \newcommand{\tmplabel}{#1}
         \label{\tmplabel}
@@ -89,11 +89,21 @@
 
 \begin{abstract}
     Characterizing neutron behavior in materials is a necessary step in building every nuclear device, and depends on heavily and complexly energy dependent phenomena.
+    In contrast to deterministic solutions which seek to solve complex characteristic equations of transport, Monte Carlo simulations use random samples of behavioral phenomena to build a stochastic model of neutron movement in the structure.
+    In this report, we build Monte Carlo models to sample neutron travel distance and reaction type to demonstrate the concept, and use the Monte Carlo software \texttt{OpenMC} to simulate pincell reactors with varying pitch and moderator, as well as with models of varying particle count, to demonstrate the technique.
+    We find sampling models of travel distance and reaction type in $^{235}$U which converge to expected distributions, and successfully demonstrate \texttt{OpenMC} simulation of varying pincell geometries.
+    We observe convergence and reduction of error in $k_{eff}$ estimates using models of increased particle count,
 \end{abstract}
 
 \section{Introduction}\label{sec:introduction}
 
 Neutron transport (a.k.a. neutronics), or the study of neutron behavior in materials, is a critical field of study in nuclear engineering, studied in the design of every nuclear reactor.\\
+
+There are a myriad of ways to predict neutron behavior in structures, but most can be broken down into deterministic methods, which solve some characteristic, deterministic, function to predict distributions of neutron behavior, and stochastic methods, which use random methods to build statistical models of neutron behavior.
+Monte Carlo Particle methods, for example, are used to simulate random lifetimes of large numbers of neutrons, until some desired macroscopic quantity (such as the power produced in a region) can be estimated, yielding a statistically interpretable estimate of that quantity.\\
+
+
+In this report, we investigate Monte Carlo simulation of individual aspects of neutron behavior, and use the software \texttt{OpenMC} to demonstrate Monte Carlo particle simulation of individual pincell geometries while comparing parameters such as pitch and moderator materials, as well as the relationship between resources (number of particles simulated) to simulation quality (convergence of $k_{eff}$ estimates).
 
 
 \clearpage %clearpage and newpage are similair, use clearpage at the end of sections, and newpage inside of sections.
@@ -115,21 +125,170 @@ By integrating Eq.~\ref{eq:d_pdf}, a cumulative density function (CDF), represen
     \end{aligned}
 \end{equation}
 This distribution ranges from 0 for $x=0$ ($e^0=1$) to $1$ as $x\rightarrow\infty$ ($e^{-\infty}=0$), as expected for a CDF.
-A Monte Carlo approximation of the expected distance $d$, would be to sample equally weighted random outcomes (by choosing random CDF values $F_s(x)=\xi$), comparing the required values of $x$, taking their average as the expected distance $d$.\\
+A Monte Carlo approximation of the expected distance $d$, would be to sample equally weighted random outcomes (by choosing random CDF values $F_s(x)=\xi$), comparing the required values of $x$, taking their average as the expected distance $d$.
+This particular CDF can be inverted to find $x$ values analytically:
+\begin{equation}
+    \begin{aligned}
+        \xi &= 1-e^{-\Sigma_t x}\\
+        1-\xi &= e^{-\Sigma_t x}\\
+        \ln(1-\xi) &= -\Sigma_t x\\
+        -\frac{1}{\Sigma_t}\ln(1-\xi) &= x\\
+    \end{aligned}
+    \label{eq:cdf-invert}
+\end{equation}
+
+For example, taking samples of $\xi \in \{0.43335, 0.01918, 0.64384\}$ yield sample distances given in Table~\ref{tab:mc-dtc}.\\
+
+\begin{table}
+    \centering
+    \caption{Distance-to-collision samples for $\Sigma_t=0.1$~cm$^{-1}$ using $F_s\xi \in \{0.43335, 0.01918, 0.64384\}$.}
+    \label{tab:mc-dtc}
+    \begin{tabular}{c|ccc}
+        \hline
+        $\xi$ & 0.43335 & 0.01918 & 0.64384 \\
+        \midrule
+        $x$ &  5.6801& 0.1937& 10.3238 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+Over large numbers, this converges to the expected distribution of individual neutrons.
+In \figref{fig:p1b-dists}, this behavior can be observed for the largest numbers $N$ of neutrons sampled, for which their distribution converges to the expected exponentially decaying distribution with mean $1/\Sigma_t=10$~cm.
+\newcommand{\pOneBplot}[1]{\defsubplot{p1b_#1}{For $N=$#1.}}
+\begin{figure}
+    \centering
+    \pOneBplot{5}\hfill
+    \pOneBplot{50}\hfill
+    \pOneBplot{500}\hfill
+    \pOneBplot{5000}
+    \caption{Distances $d$ traveled by increasing numbers $N$ of randomly sampled neutrons in a medium with $\Sigma_t=0.1$~cm$^{-1}$.}
+    \label{fig:p1b-dists}
+\end{figure}
+\FloatBarrier
+\subsubsection{Neutron Interaction Types}
+\FloatBarrier
+Now, after sampling how far a particle has traveled within the material, one can once again randomly sample the manner in which the particle interacts with the material.
+Consider the cross-sections of $^{235}$U (where each interaction type is given a standardized number) given in Table~\ref{tab:u-inters}.
+\begin{table}
+    \centering
+    \caption{The probabilities of various neutron interactions with $^{235}$U. Microscopic cross-sections for an interaction $i$ are denoted $\sigma_i$.}
+    \label{tab:u-inters}
+    \begin{tabular}{c|cccc}
+        Reaction Type & Numbering & $\sigma_i$ & Probability $f(i)=\sigma_i/\sigma_t$ & CDF $F(i)$\\
+        Capture & 0 & 244 & 0.3352 & 0.3354 \\
+        Fission & 1 & 337 & 0.4629 & 0.7981\\
+        Inelastic scatter & 2 & 14 & 0.0385 & 0.8365 \\
+        Elastic scatter & 3 & 119 & 0.1635 & 1.0000
+    \end{tabular}
+\end{table}
+Likewise, by inverting the CDF $F(i)$ to find an interaction $i$ for which $F(i)\geq\xi$ (i.e. the lowest $i$ for which $F(i)\geq\xi$), we may use random samples of $0<\xi\leq1$ to choose random interaction types.
+Samples of $\xi\in\{0.43335, 0.01918, 0.64384, 0.99381, 0.81001\}$ are shown in Table~\ref{tab:mc-rtype}.\\
+
+\begin{table}
+    \centering
+    \caption{Interaction types resulting from random samples $\xi\in\{0.43335, 0.01918, 0.64384, 0.99381, 0.81001\}$. Type 0 corresponds to capture, 1 to fission, and 2 and 3 to inelastic and elastic scattering, respectively.}
+    \label{tab:mc-rtype}
+    \begin{tabular}{c|ccccc}
+        $\xi$ & 0.43335 & 0.01918 & 0.64384 & 0.99381 & 0.81001 \\
+        Reaction Type & 1 & 0 & 1 & 3 & 2 \\
+    \end{tabular}
+\end{table}
+
+The distributions of reaction types (as numbered above) for increasing $N$ of randomly sampled interactions can be seen in \figref{fig:p1d-dists}, and can be compared as $N$ increases to the original PDF in Table~\ref{tab:mc-rtype}.
+As expected, repeating this sampling process over sufficiently large $N$ converges to a distribution similar to that of the original density function $f(i)$ (0.335 capture, 0.463 fission, 0.039 inelastic and 0.164 elastic scattering).
+\newcommand{\pOneDplot}[1]{\defsubplot{p1d_#1}{For $N=$#1.}}
+\begin{figure}
+    \centering
+    \pOneDplot{10}\hfill
+    \pOneDplot{50}\hfill
+    \pOneDplot{500}\hfill
+    \pOneDplot{5000}
+    \caption{Distributions of increasing numbers $N$ of randomly sampled reaction types of $^{235}$U. Type 0 corresponds to capture, 1 to fission, and 2 and 3 to inelastic and elastic scattering, respectively.}
+    \label{fig:p1d-dists}
+\end{figure}
 
 
+\FloatBarrier
 \subsubsection{Monte Carlo Neutron Transport}
-These Monte Carlo techniques can be 
+\FloatBarrier
+These Monte Carlo techniques can be extended to neutron transport.
+Rather than attempt to directly solve a characteristic distribution like the Neutron Transport Equation, one can randomly sample individual neutron paths and produce a distribution of events which should, given enough individual particles, converge to the expected distribution.\\
+
+Monte Carlo solutions can be made to each step of a neutron lifetime, such as how far a random neutron would travel in a medium without interacting (\figref{fig:p1b-dists}), or what reaction it should have in that medium (\figref{fig:p1d-dists}).
+To account for changes in material media, a typical Monte Carlo neutronics simulation would represent a reactor using different uniform regions, represented using constructive solid geometry (CSG).
+In CSG representations, regions are built out of unions and intersections of individual primitive surfaces like infinite cylinders and planes, such that a point can efficiently sample what surface it should intersect next, and thus what region and material it would progress through next. (Thus, when sampling for how far the neutron would travel, the program would assess if this is less than the distance to the nearest change in region, and if not, move the particle to that boundary and repeat the calculation in the new region and material.)
+If a neutron elastically scatters, these methods can be used to sample what angle it scatters and thus what energy it should have; if a neutron initiates fission in a nucleus, they can be used to sample how many neutrons should be produced, and at what energies and angles.
+Through randomly sampling these processes in a neutron's lifetime (as shown in \figref{p1e_diag}), a characterization can be made of, at their most basic, how many neutrons each average neutron results in through fission (i.e. the reactor's $k_{eff}$ value, or multiplication rate), or through tallying the number of given interaction types or phenomena, characterizations can be made of all sorts of properties like power production.\\
+\defplot{p1e_diag}{A flowchart for a neutron's random walk in geometry.\cite{npre_455_openmc_nodate}}
+
+Compared to deterministic methods, which must often make drastic assumptions or simplifications like grouping neutron energies or only sampling discrete locations and directions of neutron transport, Monte Carlo methods can robustly simulate neutrons in continuous distributions of space, energy, direction, and other phenomena, and are thus often considered a gold-standard.
+However, as observed above, these methods can require large numbers of particles to converge towards ``true'' distributions of phenomena, and can thus require vast computational resources to achieve statistically usable results.
+Fortunately, since each individual neutron requires little information about other neutrons, these algorithms are highly parallelizable, and many softwares have been developed which take advantage of advances in parallel computing (such as \texttt{OpenMC}\cite{romano_openmc_2015}, using CPU multithreading, or \texttt{Shift}\cite{pandya_implementation_2016}, using GPU architectures).\\
+
+In the rest of this report, we use the software \texttt{OpenMC}, one such Monte Carlo particle software, through its \texttt{Python} interface to assess multiplication rates for various pincell reactors, and through different parameters of simulation.
 \FloatBarrier
 \clearpage
+
 \section{Question 2}
 \FloatBarrier
 
-\subsection{Theory}
-\subsection{Numerical Solution}
+\defplotW{p2_setup}{A model of a pressurized water reactor (PWR) pin cell, used in this report to demonstrate Monte Carlo methods using the software \texttt{OpenMC}.}{0.5}
+
+Using \texttt{OpenMC}, we simulate the pincell model described in \figref{p2_setup}.
+We simulate 400 batches of neutrons, the first 200 of which are ``inactive'', that is, rather than counting towards final results, they are simulated solely to produce enough sequential generations of neutrons that pseudo-steady (constant $k_{eff}$) multiplication should be observed.
+In each batch, some number $p$ of particles are simulated.
+We perform three simulations, for the above parameters and $p\in\{1000, 2000, 4000\}$, and plot the resulting estimates (with uncertainty) in \figref{p2a_keff}.
+We observe, as expected, that results appear to converge as $k$ increases, with associated uncertainty steadily decreasing.
+As more particles are simulated and begin to approximate some ``true'' distribution, the variance of average behavior and properties across the model and would be expected to decrease with higher $p$.\\
+
+\defplot{p2a_keff}{The $k_{eff}$ estimated and associated uncertainty for pincell geometries simulated using numbers $p\in\{1000, 2000, 4000\}$ of particles in each batch.}
+
+As mentioned previously, these simulations can also yield spatial information about phenomena like power.
+For $p=2000$, we assign a mesh to tally neutron fission reactions, and thus estimate the relative power distribution across the pincell geometry.
+This power distribution may be observed in \figref{p2b_heat}, and matches expectations from physical intuition and analytical methods, with no power generated in the moderator and cladding (which lack fission cross-sections), and the highest power generated on the outer edges of the fuel region, where thermalized neutrons reenter the fuel region.\\
+
+\defplot{p2b_heat}{The relative power distribution across a pincell geometry, estimated using $p=2000$ particles per batch.}
+
+We may also compare simulations with different geometries such as pitch, or the side-length of the geometry.
+Using simulations of $p=1000$ particles per batch, we simulate the aforementioned pincell with varied pitches of $[1.10, 1.44720, 1.80, 2.00]$~cm, and plot estimations of $k_{eff}$ in \figref{p2c_keff}.
+Using these simulations, we observe an optimal pitch of around 1.80~cm.
+This pattern is expected from physical intuition: for lower pitches, there is not enough moderator to sufficiently thermalize fast neutrons before they interact with fuel, and for higher pitches, there is too much moderator and more thermal neutrons begin to be absorbed by the moderator before reaching the fuel again, leaving an optimal pitch of 1.8~cm.
+
+\defplot{p2c_keff}{The multiplication rates $k_{eff}$ estimated using 1000-particle-batch \texttt{OpenMC} models of pincells with various pitches.}
+
+In \figref{fig:p1d-dists}, we compare pincell simulations with the water moderator replaced with corn syrup (20\% water by weight, 80\% glucose), quartz sand (SiO$_2$), and vanillin ($\mathrm{C_8H_8O_3}$) with varying densities to optimize moderator material design.
+Quartz sand and corn syrup are highly abundant flowing materials, with quartz sand being found readily in nature and corn syrup produced from high-volume cereal grain.
+Vanillin is an organic compound with a strong, pleasant aroma which, while solid at room temperature, melts at a low temperature of 84$^\circ$C\cite{pubchem_vanillin_nodate}.\\
+
+We find that quartz sand, having higher-z elemental composition (lacking H or C), is a much poorer moderator than the organic moderators (featuring H or C) tested, requiring a density of 80~$\mathrm{g/cm^3}$ to reach the still-subcritical $k_{eff}= 0.90449\pm0.00207$.
+In contrast, the organic materials corn syrup and vanillin are much more effective moderators at optimal densities of 2.5~$\mathrm{g/cm^3}$ ($k_{eff}=1.45321\pm0.00203$) and 3.75~$\mathrm{g/cm^3}$ ($k_{eff}=1.45205\pm0.00204$).\\
+
+\begin{figure}
+    \centering
+    \defsubplot{p2d_corn_syrup}{For corn syrup (20\% water by weight, 80\% glucose).}\hfill
+    \defsubplot{p2d_quartz}{For quartz (SiO$_2$).}\hfill
+    \defsubplot{p2d_vanillin}{For vanillin ($\mathrm{C_8H_8O_3}$).}\hfill
+    \defsubplot{p2d_all}{For all three materials compared.}
+    \caption{Estimates of pincell $k_{eff}$ for varying moderator compositions and densities, using $p=1000$.}
+\end{figure}
+
+Of the alternative materials tested, we identify corn syrup to be the most ideal moderator, reaching the highest multiplication rate at the lowest density (both for minimal material strain, and for ease of procurement and placement, as all given materials only have natural densities of approximately 1~$g/cm^3$).
+This makes sense, as corn syrup (a mix of H$_2$O and $\mathrm{C_6H_{12}O_6}$) has the highest proportion of the lowest-z atom H, which has a high scattering cross-section and for which the neutron energy lost per collision is maximized.\\
+
+Additionally, corn syrup is highly viscous, a desirable property for heat transfer, and is highly affordable, produced from commonly grown crops at large scale for the food industry, as opposed to vanillin, a trace compound either harvested from rare plants or synthesized from crude oil derivatives.\\
+
+However even this most viable alternative is not without drawbacks, as glucose undergoes a variety of complex chemical reactions at high temperatures, producing a wide variety of derivatives with potentially corrosive, clogging, or otherwise undesirable effects in the reactor which require additional maintenance.
+
 \FloatBarrier
 \clearpage
 \section{Conclusions}
+The objectives of this laboratory were largely successful.\\
+
+Monte Carlo methods were derived to use random number generation to sample neutron travel distances and reaction types, and \texttt{OpenMC} was successfully employed to simulate varying parameters of pincell reactors and models.\\
+
+We observe that $k_{eff}$ estimates using \texttt{OpenMC} converge for increasing numbers $p$ of particles in each batch, and we observe a distribution of power matching analytical expectations, with power maximized in the edges of the fuel region.
+We observe that for the given pincell geometry there is an optimal pitch of approximately 1.8~cm, for which $k_{eff}$ is maximized.
+We assessed alternative moderators of corn syrup, vanillin, and quartz sand in the original pincell geometry, finding corn syrup and vanillin to be viable moderators, with sand requiring infeasible density to maximize $k_{eff}$, and unable to reach criticality in the given geometry.
 
 \clearpage
 \section{References}\label{sec:References}
