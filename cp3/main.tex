@@ -1,0 +1,137 @@
+\documentclass[11pt]{article} %font size at 11
+
+\usepackage[english]{babel}
+\usepackage[top=2.5cm,bottom=2cm,left=3cm,right=3cm]{geometry}
+
+%Subfigures
+\usepackage{subcaption}
+%Images
+\usepackage{graphicx} % Package required for inserting images
+
+%Tables
+\usepackage{booktabs} % Package provides helpful table formatting
+\usepackage{multicol} % Package for helpful table formatting
+\usepackage{multirow} % Package for helpful table formatting
+
+%Floating management
+\usepackage{placeins} % FloatBarrier
+
+%Math
+\usepackage{amsmath} % Package provides useful math environments
+\usepackage{amssymb} % Package provides more symbols than base LaTeX
+\usepackage{xcolor} % colors yippee
+\usepackage{lscape} % put that one evil matrix into landscape mode
+
+%Lists
+\usepackage{enumitem} %Package for helpful list formatting
+
+\usepackage[colorlinks=true, urlcolor=blue, linkcolor=black, citecolor=black]{hyperref} % Package for hyperlinks
+\usepackage[T1]{fontenc} %Times New Roman
+
+% Figure Macros
+\newcommand{\figwidth}{0.75\linewidth}
+\newcommand{\figref}[1]{Fig.~\ref{#1}}
+\newcommand{\defplotW}[3]{
+    \begin{figure}[!htb]
+        \centering
+        \includegraphics[width=#3\linewidth]{figures/#1.png}
+        \caption{#2}
+        \newcommand{\tmplabel}{#1}
+        \label{\tmplabel}
+    \end{figure}
+}
+\newcommand{\defplot}[2]{\defplotW{#1}{#2}{0.75}}
+\newcommand{\defsubplotW}[3]{
+    % \hfill
+    \begin{subfigure}{#3\linewidth}
+        \includegraphics[width=\textwidth]{figures/#1.png}
+        \caption{#2}
+        \newcommand{\tmplabel}{#1}
+        \label{\tmplabel}
+    \end{subfigure}
+    % \hfill
+}
+\newcommand{\defsubplot}[2]{\defsubplotW{#1}{#2}{0.45}}
+
+\newcommand{\bigO}{\mathcal{O}}
+
+
+
+%%% REMOVE bibtex OR biblatex, conflicts can arise
+%\usepackage{bibtex}
+%Older package for citations and bibliography generation. Use this package if you do not want to have a seperate .bib file. This package requires much more user effort. This package requires you to provide the citations. 
+
+\usepackage{biblatex} %Newer package for citations and bibliography generation. Use this package if you want a seperate .bib file. This package was made to declutter .tex files, and requires little user effort. This package does not require you to make the citations, as it generates them for you.
+
+\addbibresource{refs.bib} %needed for biblatex
+\usepackage{csquotes} % biblatex complains without this
+
+
+
+% \usepackage{lipsum} % do not include this, this is for lorem ipsum text
+
+\title{NPRE 455 Computer Project 3: Monte Carlo Applications}
+\author{Owen Strong}
+\date{April 30, 2026}
+
+\begin{document}
+\pagenumbering{gobble}
+\maketitle
+\clearpage
+
+\tableofcontents
+\clearpage
+
+\listoffigures
+\listoftables
+\clearpage
+\pagenumbering{arabic}
+
+\begin{abstract}
+    Characterizing neutron behavior in materials is a necessary step in building every nuclear device, and depends on heavily and complexly energy dependent phenomena.
+\end{abstract}
+
+\section{Introduction}\label{sec:introduction}
+
+Neutron transport (a.k.a. neutronics), or the study of neutron behavior in materials, is a critical field of study in nuclear engineering, studied in the design of every nuclear reactor.\\
+
+
+\clearpage %clearpage and newpage are similair, use clearpage at the end of sections, and newpage inside of sections.
+
+\section{Question 1: Monte Carlo Methods}\label{sec:q1}
+\FloatBarrier
+\subsection{Distance to Collision}
+The probability density function (PDF) for the distance $d$ to a neutron collision (assuming a constant macroscopic total cross-section $\Sigma_t$) is given:
+\begin{equation}
+    f_d(x)=e^{-\Sigma_t x}\Sigma_t
+    \label{eq:d_pdf}
+\end{equation}
+By integrating Eq.~\ref{eq:d_pdf}, a cumulative density function (CDF), representing the fraction of neutrons which would travel \emph{less} than that distance, may be found:
+\begin{equation}
+    \begin{aligned}
+        F_s(x) &= \int_{0}^{x}e^{-\Sigma_t x'}\Sigma_t dx'\\
+        &= \left.\left[-e^{-\Sigma_t x'}\right]\right|_0^x \\
+        &= 1-e^{-\Sigma_t x}
+    \end{aligned}
+\end{equation}
+This distribution ranges from 0 for $x=0$ ($e^0=1$) to $1$ as $x\rightarrow\infty$ ($e^{-\infty}=0$), as expected for a CDF.
+A Monte Carlo approximation of the expected distance $d$, would be to sample equally weighted random outcomes (by choosing random CDF values $F_s(x)=\xi$), comparing the required values of $x$, taking their average as the expected distance $d$.\\
+
+
+\subsubsection{Monte Carlo Neutron Transport}
+These Monte Carlo techniques can be 
+\FloatBarrier
+\clearpage
+\section{Question 2}
+\FloatBarrier
+
+\subsection{Theory}
+\subsection{Numerical Solution}
+\FloatBarrier
+\clearpage
+\section{Conclusions}
+
+\clearpage
+\section{References}\label{sec:References}
+\printbibliography[heading=none]
+\end{document}
